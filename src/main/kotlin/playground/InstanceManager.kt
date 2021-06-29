@@ -1,117 +1,134 @@
 package playground
 
 import org.lwjgl.system.MemoryStack.stackPush
-import org.lwjgl.vulkan.EXTDebugUtils.VK_EXT_DEBUG_UTILS_EXTENSION_NAME
+import org.lwjgl.vulkan.*
+import org.lwjgl.vulkan.EXTDebugUtils.*
 import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.vulkan.VkExtensionProperties
-import org.lwjgl.vulkan.VkInstance
-import org.lwjgl.vulkan.VkInstanceCreateInfo
-import org.lwjgl.vulkan.VkLayerProperties
 import java.nio.ByteBuffer
 
 const val VK_LAYER_KHRONOS_VALIDATION_NAME = "VK_LAYER_KHRONOS_validation"
-class InstanceManager(tryDebug: Boolean) {
 
-    private val instance: VkInstance
+fun initInstance(appState: ApplicationState, tryDebug: Boolean) {
+    stackPush().use { stack ->
+        val pNumAvailableExtensions = stack.callocInt(1)
+        assertSuccess(
+            vkEnumerateInstanceExtensionProperties(null as ByteBuffer?, pNumAvailableExtensions, null),
+            "EnumerateInstanceExtensionProperties", "count"
+        )
+        val numAvailableExtensions = pNumAvailableExtensions[0]
 
-    init {
-        stackPush().use {stack ->
-            val pNumAvailableExtensions = stack.callocInt(1)
-            assertSuccess(
-                vkEnumerateInstanceExtensionProperties(null as ByteBuffer?, pNumAvailableExtensions, null),
-                "EnumerateInstanceExtensionProperties", "count"
+        val pAvailableExtensions = VkExtensionProperties.callocStack(numAvailableExtensions, stack)
+        assertSuccess(
+            vkEnumerateInstanceExtensionProperties(null as ByteBuffer?, pNumAvailableExtensions, pAvailableExtensions),
+            "EnumerateInstanceExtensionProperties", "extensions"
+        )
+
+        val availableExtensions = HashSet<String>()
+        for (extensionIndex in 0 until numAvailableExtensions) {
+            availableExtensions.add(pAvailableExtensions[extensionIndex].extensionNameString())
+        }
+
+        println("There are $numAvailableExtensions available instance extensions:")
+        for (extension in availableExtensions) {
+            println(extension)
+        }
+        println()
+
+        val chosenExtensions = HashSet<String>()
+        if (tryDebug && availableExtensions.contains(VK_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
+            chosenExtensions.add(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        }
+        val numChosenExtensions = chosenExtensions.size
+
+        val pChosenExtensions = stack.callocPointer(numChosenExtensions)
+        for ((index, extension) in chosenExtensions.withIndex()) {
+            pChosenExtensions.put(index, stack.UTF8(extension))
+        }
+
+        val pNumAvailableLayers = stack.callocInt(1)
+        assertSuccess(
+            vkEnumerateInstanceLayerProperties(pNumAvailableLayers, null),
+            "EnumerateInstanceLayerProperties", "count"
+        )
+        val numAvailableLayers = pNumAvailableLayers[0]
+        val pAvailableLayers = VkLayerProperties.callocStack(numAvailableLayers, stack)
+        assertSuccess(
+            vkEnumerateInstanceLayerProperties(pNumAvailableLayers, pAvailableLayers),
+            "EnumerateInstanceLayerProperties", "layers"
+        )
+        val availableLayers = HashSet<String>()
+        for (index in 0 until numAvailableLayers) {
+            availableLayers.add(pAvailableLayers[index].layerNameString())
+        }
+
+        println("There are $numAvailableLayers available instance layers:")
+        for (layer in availableLayers) {
+            println(layer)
+        }
+        println()
+
+        val chosenLayers = HashSet<String>()
+        if (tryDebug && availableLayers.contains(VK_LAYER_KHRONOS_VALIDATION_NAME)) {
+            chosenLayers.add(VK_LAYER_KHRONOS_VALIDATION_NAME)
+        }
+        val numChosenLayers = chosenLayers.size
+
+        val pChosenLayers = stack.callocPointer(numChosenLayers)
+        for ((index, layer) in chosenLayers.withIndex()) {
+            pChosenLayers.put(index, stack.UTF8(layer))
+        }
+
+        println("Enabling $numChosenExtensions instance extensions:")
+        for (extension in chosenExtensions) {
+            println(extension)
+        }
+        println()
+
+        println("Enabling $numChosenLayers instance layers:")
+        for (layer in chosenLayers) {
+            println(layer)
+        }
+        println()
+
+        val ciInstance = VkInstanceCreateInfo.callocStack(stack)
+        ciInstance.sType(VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO)
+        ciInstance.ppEnabledExtensionNames(pChosenExtensions)
+        ciInstance.ppEnabledLayerNames(pChosenLayers)
+
+        val pInstance = stack.callocPointer(1)
+        assertSuccess(vkCreateInstance(ciInstance, null, pInstance), "createInstance")
+        appState.instance = VkInstance(pInstance.get(0), ciInstance)
+
+        if (tryDebug) {
+            val ciDebugMessenger = VkDebugUtilsMessengerCreateInfoEXT.callocStack(stack)
+            ciDebugMessenger.sType(VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT);
+            ciDebugMessenger.messageSeverity(
+                VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT or
+                        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT or
+                        VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT
             )
-            val numAvailableExtensions = pNumAvailableExtensions[0]
-
-            val pAvailableExtensions = VkExtensionProperties.callocStack(numAvailableExtensions, stack)
-            assertSuccess(
-                vkEnumerateInstanceExtensionProperties(null as ByteBuffer?, pNumAvailableExtensions, pAvailableExtensions),
-                "EnumerateInstanceExtensionProperties", "extensions"
+            ciDebugMessenger.messageType(
+                VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT or
+                        VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT or
+                        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT
             )
-
-            val availableExtensions = HashSet<String>()
-            for (extensionIndex in 0 until numAvailableExtensions) {
-                availableExtensions.add(pAvailableExtensions[extensionIndex].extensionNameString())
+            ciDebugMessenger.pfnUserCallback { _, _, rawData, _->
+                val data = VkDebugUtilsMessengerCallbackDataEXT.create(rawData)
+                println("VulkanDebugCallback: ${data.pMessageString()}")
+                VK_FALSE
             }
 
-            println("There are $numAvailableExtensions available instance extensions:")
-            for (extension in availableExtensions) {
-                println(extension)
-            }
-            println()
-
-            val chosenExtensions = HashSet<String>()
-            if (tryDebug && availableExtensions.contains(VK_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
-                chosenExtensions.add(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-            }
-            val numChosenExtensions = chosenExtensions.size
-
-            val pChosenExtensions = stack.callocPointer(numChosenExtensions)
-            for ((index, extension) in chosenExtensions.withIndex()) {
-                pChosenExtensions.put(index, stack.UTF8(extension))
-            }
-
-            val pNumAvailableLayers = stack.callocInt(1)
+            val pDebugMessenger = stack.callocLong(1)
             assertSuccess(
-                vkEnumerateInstanceLayerProperties(pNumAvailableLayers, null),
-                "EnumerateInstanceLayerProperties", "count"
+                vkCreateDebugUtilsMessengerEXT(appState.instance, ciDebugMessenger, null, pDebugMessenger),
+                "CreateDebugUtilsMessengerEXT"
             )
-            val numAvailableLayers = pNumAvailableLayers[0]
-            val pAvailableLayers = VkLayerProperties.callocStack(numAvailableLayers, stack)
-            assertSuccess(
-                vkEnumerateInstanceLayerProperties(pNumAvailableLayers, pAvailableLayers),
-                "EnumerateInstanceLayerProperties", "layers"
-            )
-            val availableLayers = HashSet<String>()
-            for (index in 0 until numAvailableLayers) {
-                availableLayers.add(pAvailableLayers[index].layerNameString())
-            }
-
-            println("There are $numAvailableLayers available instance layers:")
-            for (layer in availableLayers) {
-                println(layer)
-            }
-            println()
-
-            val chosenLayers = HashSet<String>()
-            if (tryDebug && availableLayers.contains(VK_LAYER_KHRONOS_VALIDATION_NAME)) {
-                chosenLayers.add(VK_LAYER_KHRONOS_VALIDATION_NAME)
-            }
-            val numChosenLayers = chosenLayers.size
-
-            val pChosenLayers = stack.callocPointer(numChosenLayers)
-            for ((index, layer) in chosenLayers.withIndex()) {
-                pChosenLayers.put(index, stack.UTF8(layer))
-            }
-
-            println("Enabling $numChosenExtensions instance extensions:")
-            for (extension in chosenExtensions) {
-                println(extension)
-            }
-            println()
-
-            println("Enabling $numChosenLayers instance layers:")
-            for (layer in chosenLayers) {
-                println(layer)
-            }
-            println()
-
-            val ciInstance = VkInstanceCreateInfo.callocStack(stack)
-            ciInstance.sType(VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO)
-            ciInstance.ppEnabledExtensionNames(pChosenExtensions)
-            ciInstance.ppEnabledLayerNames(pChosenLayers)
-
-            val pInstance = stack.callocPointer(1)
-            assertSuccess(vkCreateInstance(ciInstance, null, pInstance), "createInstance")
-            this.instance = VkInstance(pInstance.get(0), ciInstance)
+            appState.debugCallback = pDebugMessenger[0]
         }
     }
+}
 
-    fun run() {
-
-    }
-
-    fun destroy() {
-        vkDestroyInstance(this.instance, null)
-    }
+fun destroyInstance(appState: ApplicationState) {
+    appState.destroyDebugCallback()
+    appState.destroyInstance()
 }

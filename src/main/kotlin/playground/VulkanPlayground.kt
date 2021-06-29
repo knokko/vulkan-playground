@@ -3,7 +3,7 @@ package playground
 const val TRY_DEBUG = true
 
 fun main() {
-    val instanceManager = InstanceManager(TRY_DEBUG)
-    instanceManager.run()
-    instanceManager.destroy()
+    val appState = ApplicationState()
+    initInstance(appState, TRY_DEBUG)
+    destroyInstance(appState)
 }
