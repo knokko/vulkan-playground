@@ -103,7 +103,6 @@ fun initInstance(appState: ApplicationState, tryDebug: Boolean) {
             val ciDebugMessenger = VkDebugUtilsMessengerCreateInfoEXT.callocStack(stack)
             ciDebugMessenger.sType(VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT);
             ciDebugMessenger.messageSeverity(
-                VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT or
                         VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT or
                         VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT
             )

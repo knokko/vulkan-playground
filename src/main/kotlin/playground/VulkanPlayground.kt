@@ -5,5 +5,6 @@ const val TRY_DEBUG = true
 fun main() {
     val appState = ApplicationState()
     initInstance(appState, TRY_DEBUG)
+    choosePhysicalDevice(appState)
     destroyInstance(appState)
 }
