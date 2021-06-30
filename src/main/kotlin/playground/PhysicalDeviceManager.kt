@@ -1,5 +1,6 @@
 package playground
 
+import org.lwjgl.glfw.GLFWVulkan.glfwGetPhysicalDevicePresentationSupport
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
@@ -12,7 +13,7 @@ private class DeviceScore {
     // Initially true, but will be replaced with false if any extension is missing
     var hasRequiredExtensions = true
     // Initially false, but will be set to true if a graphics queue is found
-    var hasGraphicsQueue = false
+    var hasSuitableGraphicsQueue = false
     // 2 for discrete, 1 for integrated, 0 for everything else
     var typeScore = 0
     // The sum of the size of the memory heaps
@@ -37,6 +38,7 @@ fun choosePhysicalDevice(appState: ApplicationState) {
             vkEnumeratePhysicalDevices(appState.instance, pNumDevices, pDevices),
             "EnumeratePhysicalDevices", "devices"
         )
+
 
         println("There are $numDevices physical devices with Vulkan support:")
         val scores = Array(numDevices) { DeviceScore() }
@@ -88,8 +90,10 @@ fun choosePhysicalDevice(appState: ApplicationState) {
             for (familyIndex in 0 until numQueueFamilies) {
                 val queueFamilyProps = pQueueFamilyProps[familyIndex]
                 if (queueFamilyProps.queueFlags() and VK_QUEUE_GRAPHICS_BIT != 0) {
-                    scores[index].hasGraphicsQueue = true
-                    break
+                    if (glfwGetPhysicalDevicePresentationSupport(appState.instance, device, familyIndex)) {
+                        scores[index].hasSuitableGraphicsQueue = true
+                        break
+                    }
                 }
             }
 
@@ -110,15 +114,15 @@ fun choosePhysicalDevice(appState: ApplicationState) {
 
         val chosenDevice = run {
 
-            val numSufficientDevices = scores.count { score -> score.hasRequiredExtensions && score.hasGraphicsQueue }
+            val numSufficientDevices = scores.count { score -> score.hasRequiredExtensions && score.hasSuitableGraphicsQueue }
             if (numSufficientDevices == 0) {
                 throw UnsupportedOperationException(
-                    "No physical device (graphics card) has a graphics queue and all required extensions"
+                    "No physical device (graphics card) has a presentation-ready graphics queue and all required extensions"
                 )
             }
             if (numSufficientDevices == 1) {
-                val chosenIndex = scores.indexOfFirst { score -> score.hasRequiredExtensions && score.hasGraphicsQueue }
-                println("Chose ${scores[chosenIndex].name} because it is the only device with a graphics queue and all required extensions")
+                val chosenIndex = scores.indexOfFirst { score -> score.hasRequiredExtensions && score.hasSuitableGraphicsQueue }
+                println("Chose ${scores[chosenIndex].name} because it is the only device with a presentation-ready graphics queue and all required extensions")
                 return@run VkPhysicalDevice(pDevices[chosenIndex], appState.instance)
             }
 

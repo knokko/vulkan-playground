@@ -1,6 +1,9 @@
 package playground
 
+import org.lwjgl.glfw.GLFWVulkan
+import org.lwjgl.glfw.GLFWVulkan.glfwGetRequiredInstanceExtensions
 import org.lwjgl.system.MemoryStack.stackPush
+import org.lwjgl.system.MemoryUtil.memUTF8
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugUtils.*
 import org.lwjgl.vulkan.VK10.*
@@ -9,6 +12,10 @@ import java.nio.ByteBuffer
 const val VK_LAYER_KHRONOS_VALIDATION_NAME = "VK_LAYER_KHRONOS_validation"
 
 fun initInstance(appState: ApplicationState, tryDebug: Boolean) {
+    if (!GLFWVulkan.glfwVulkanSupported()) {
+        throw UnsupportedOperationException("No GLFW ~ Vulkan support")
+    }
+
     stackPush().use { stack ->
         val pNumAvailableExtensions = stack.callocInt(1)
         assertSuccess(
@@ -35,9 +42,21 @@ fun initInstance(appState: ApplicationState, tryDebug: Boolean) {
         println()
 
         val chosenExtensions = HashSet<String>()
+        val pRequiredExtensions = glfwGetRequiredInstanceExtensions()
+            ?: throw RuntimeException("No suitable GLFW Vulkan instance extensions found")
+
         if (tryDebug && availableExtensions.contains(VK_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
             chosenExtensions.add(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
+        for (index in 0 until pRequiredExtensions.capacity()) {
+            val extension = memUTF8(pRequiredExtensions[index])
+            if (availableExtensions.contains(extension)) {
+                chosenExtensions.add(extension)
+            } else {
+                throw RuntimeException("The required instance extension $extension (required by GLFW) is not available")
+            }
+        }
+
         val numChosenExtensions = chosenExtensions.size
 
         val pChosenExtensions = stack.callocPointer(numChosenExtensions)
