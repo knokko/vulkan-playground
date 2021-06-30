@@ -1,11 +1,8 @@
 package playground
 
 import org.lwjgl.system.MemoryStack.stackPush
+import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.vulkan.VkExtensionProperties
-import org.lwjgl.vulkan.VkPhysicalDevice
-import org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties
-import org.lwjgl.vulkan.VkPhysicalDeviceProperties
 import java.nio.ByteBuffer
 
 val requiredDeviceExtensions = arrayOf("VK_KHR_draw_indirect_count")
@@ -14,6 +11,8 @@ private class DeviceScore {
     lateinit var name: String
     // Initially true, but will be replaced with false if any extension is missing
     var hasRequiredExtensions = true
+    // Initially false, but will be set to true if a graphics queue is found
+    var hasGraphicsQueue = false
     // 2 for discrete, 1 for integrated, 0 for everything else
     var typeScore = 0
     // The sum of the size of the memory heaps
@@ -80,6 +79,20 @@ fun choosePhysicalDevice(appState: ApplicationState) {
                 }
             }
 
+            val pNumQueueFamilies = stack.callocInt(1)
+            vkGetPhysicalDeviceQueueFamilyProperties(device, pNumQueueFamilies, null)
+            val numQueueFamilies = pNumQueueFamilies[0]
+
+            val pQueueFamilyProps = VkQueueFamilyProperties.callocStack(numQueueFamilies, stack)
+            vkGetPhysicalDeviceQueueFamilyProperties(device, pNumQueueFamilies, pQueueFamilyProps)
+            for (familyIndex in 0 until numQueueFamilies) {
+                val queueFamilyProps = pQueueFamilyProps[familyIndex]
+                if (queueFamilyProps.queueFlags() and VK_QUEUE_GRAPHICS_BIT != 0) {
+                    scores[index].hasGraphicsQueue = true
+                    break
+                }
+            }
+
             if (props.deviceType() == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
                 scores[index].typeScore = 2
             } else if (props.deviceType() == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
@@ -95,44 +108,49 @@ fun choosePhysicalDevice(appState: ApplicationState) {
         }
         println()
 
+        val chosenDevice = run {
 
-        val numSufficientDevices = scores.count { score -> score.hasRequiredExtensions }
-        if (numSufficientDevices == 0) {
-            throw UnsupportedOperationException("No physical device (graphics card) has all required extensions")
+            val numSufficientDevices = scores.count { score -> score.hasRequiredExtensions && score.hasGraphicsQueue }
+            if (numSufficientDevices == 0) {
+                throw UnsupportedOperationException(
+                    "No physical device (graphics card) has a graphics queue and all required extensions"
+                )
+            }
+            if (numSufficientDevices == 1) {
+                val chosenIndex = scores.indexOfFirst { score -> score.hasRequiredExtensions && score.hasGraphicsQueue }
+                println("Chose ${scores[chosenIndex].name} because it is the only device with a graphics queue and all required extensions")
+                return@run VkPhysicalDevice(pDevices[chosenIndex], appState.instance)
+            }
+
+            val numDiscreteDevices = scores.count { score -> score.typeScore == 2 }
+            if (numDiscreteDevices == 1) {
+                val chosenIndex = scores.indexOfFirst { score -> score.typeScore == 2 }
+                println("Chose ${scores[chosenIndex].name} because it is the only discrete device")
+                return@run VkPhysicalDevice(pDevices[chosenIndex], appState.instance)
+            }
+
+            val numIntegratedDevices = scores.count { score -> score.typeScore == 1 }
+            if (numIntegratedDevices == 1) {
+                val chosenIndex = scores.indexOfFirst { score -> score.typeScore == 1 }
+                println("Chose ${scores[chosenIndex].name} because it is the only integrated device")
+                return@run VkPhysicalDevice(pDevices[chosenIndex], appState.instance)
+            }
+
+            val maxMemorySize = scores.maxOf { score -> score.memorySize }
+            val numMaxMemoryDevices = scores.count { score -> score.memorySize == maxMemorySize }
+            val chosenIndex = scores.indexOfFirst { score -> score.memorySize == maxMemorySize }
+            if (numMaxMemoryDevices == 1) {
+                println("Chose ${scores[chosenIndex].name} because it has the biggest memory")
+                VkPhysicalDevice(pDevices[chosenIndex], appState.instance)
+            } else {
+                println("Chose ${scores[chosenIndex].name} because it is the first listed device with biggest memory")
+                VkPhysicalDevice(pDevices[chosenIndex], appState.instance)
+            }
         }
 
-        if (numSufficientDevices == 1) {
-            val chosenIndex = scores.indexOfFirst { score -> score.hasRequiredExtensions }
-            println("Chose ${scores[chosenIndex].name} because it is the only device with all required extensions")
-            appState.physicalDevice = VkPhysicalDevice(pDevices[chosenIndex], appState.instance)
-            return
-        }
-
-        val numDiscreteDevices = scores.count { score -> score.typeScore == 2 }
-        if (numDiscreteDevices == 1) {
-            val chosenIndex = scores.indexOfFirst { score -> score.typeScore == 2 }
-            println("Chose ${scores[chosenIndex].name} because it is the only discrete device")
-            appState.physicalDevice = VkPhysicalDevice(pDevices[chosenIndex], appState.instance)
-            return
-        }
-
-        val numIntegratedDevices = scores.count { score -> score.typeScore == 1 }
-        if (numIntegratedDevices == 1) {
-            val chosenIndex = scores.indexOfFirst { score -> score.typeScore == 1 }
-            println("Chose ${scores[chosenIndex].name} because it is the only integrated device")
-            appState.physicalDevice = VkPhysicalDevice(pDevices[chosenIndex], appState.instance)
-            return
-        }
-
-        val maxMemorySize = scores.maxOf { score -> score.memorySize }
-        val numMaxMemoryDevices = scores.count { score -> score.memorySize == maxMemorySize }
-        val chosenIndex = scores.indexOfFirst { score -> score.memorySize == maxMemorySize }
-        if (numMaxMemoryDevices == 1) {
-            println("Chose ${scores[chosenIndex].name} because it has the biggest memory")
-            appState.physicalDevice = VkPhysicalDevice(pDevices[chosenIndex], appState.instance)
-        } else {
-            println("Chose ${scores[chosenIndex].name} because it is the first listed device with biggest memory")
-            appState.physicalDevice = VkPhysicalDevice(pDevices[chosenIndex], appState.instance)
-        }
+        // So far, we only care about the required extensions, which must be available if we reach this line
+        val chosenExtensions = requiredDeviceExtensions.toSet()
+        appState.physicalDevice = chosenDevice
+        appState.deviceExtensions = chosenExtensions
     }
 }
