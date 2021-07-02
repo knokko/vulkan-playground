@@ -12,6 +12,7 @@ import org.lwjgl.vulkan.VkPhysicalDevice
 class ApplicationState {
 
     var window: Long? = null
+    var windowSurface: Long? = null
 
     lateinit var instance: VkInstance
     var debugCallback: Long? = null
@@ -21,21 +22,9 @@ class ApplicationState {
     lateinit var device: VkDevice
     var queueFamilyIndex: Int? = null
 
-    fun destroyWindow() {
-        if (window != null) {
-            glfwDestroyWindow(window!!)
-        }
-    }
-
     fun destroyInstance() {
         if (this::instance.isInitialized) {
             vkDestroyInstance(instance, null)
-        }
-    }
-
-    fun destroyDebugCallback() {
-        if (debugCallback != null) {
-            vkDestroyDebugUtilsMessengerEXT(instance, debugCallback!!, null)
         }
     }
 

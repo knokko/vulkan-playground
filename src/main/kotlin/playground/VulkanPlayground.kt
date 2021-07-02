@@ -10,6 +10,7 @@ fun main() {
     try {
         initWindow(appState)
         initInstance(appState, TRY_DEBUG)
+        initWindowSurface(appState)
         choosePhysicalDevice(appState)
         initLogicalDevice(appState)
 

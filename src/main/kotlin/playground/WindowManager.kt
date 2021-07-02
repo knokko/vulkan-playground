@@ -26,6 +26,7 @@ fun initWindowSurface(appState: ApplicationState) {
             glfwCreateWindowSurface(appState.instance, appState.window!!, null, pSurface),
             "CreateWindowSurface"
         )
+        appState.windowSurface = pSurface[0]
     }
 }
 
@@ -43,6 +44,8 @@ fun shouldCloseWindow(appState: ApplicationState): Boolean {
 }
 
 fun destroyWindow(appState: ApplicationState) {
-    appState.destroyWindow()
+    if (appState.window != null) {
+        glfwDestroyWindow(appState.window!!)
+    }
     glfwTerminate()
 }

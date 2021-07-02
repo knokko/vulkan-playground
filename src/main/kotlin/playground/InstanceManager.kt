@@ -147,6 +147,8 @@ fun initInstance(appState: ApplicationState, tryDebug: Boolean) {
 }
 
 fun destroyInstance(appState: ApplicationState) {
-    appState.destroyDebugCallback()
+    if (appState.debugCallback != null) {
+        vkDestroyDebugUtilsMessengerEXT(appState.instance, appState.debugCallback!!, null)
+    }
     appState.destroyInstance()
 }
