@@ -22,6 +22,8 @@ class ApplicationState {
     lateinit var device: VkDevice
     var queueFamilyIndex: Int? = null
 
+    var basicPipeline: Long? = null
+
     fun destroyInstance() {
         if (this::instance.isInitialized) {
             vkDestroyInstance(instance, null)
