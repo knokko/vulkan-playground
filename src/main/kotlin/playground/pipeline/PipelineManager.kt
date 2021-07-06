@@ -4,6 +4,7 @@ import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkGraphicsPipelineCreateInfo
+import org.lwjgl.vulkan.VkPipelineDynamicStateCreateInfo
 import playground.ApplicationState
 import playground.assertSuccess
 import playground.createBasicShaders
@@ -40,9 +41,18 @@ fun createBasicGraphicsPipeline(appState: ApplicationState, ciPipeline: VkGraphi
     ciPipeline.pMultisampleState(createBasicMultisampleState(appState, stack))
     ciPipeline.pDepthStencilState(createBasicDepthStencilState(stack))
     ciPipeline.pColorBlendState(null)
+    ciPipeline.pDynamicState(createBasicDynamicState(stack))
     ciPipeline.layout(appState.basicPipelineLayout!!)
     ciPipeline.renderPass(appState.basicRenderPass!!)
     ciPipeline.subpass(0)
+}
+
+fun createBasicDynamicState(stack: MemoryStack): VkPipelineDynamicStateCreateInfo {
+    val ciDynamic = VkPipelineDynamicStateCreateInfo.callocStack(stack)
+    ciDynamic.sType(VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO)
+    ciDynamic.pDynamicStates(stack.ints(VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR))
+
+    return ciDynamic
 }
 
 fun destroyGraphicsPipelines(appState: ApplicationState) {
