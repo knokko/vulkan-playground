@@ -2,8 +2,7 @@ package playground
 
 import org.lwjgl.glfw.GLFW.glfwDestroyWindow
 import org.lwjgl.vulkan.EXTDebugUtils.vkDestroyDebugUtilsMessengerEXT
-import org.lwjgl.vulkan.VK10.vkDestroyDevice
-import org.lwjgl.vulkan.VK10.vkDestroyInstance
+import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkDebugUtilsMessengerCallbackEXT
 import org.lwjgl.vulkan.VkDevice
 import org.lwjgl.vulkan.VkInstance
@@ -22,6 +21,10 @@ class ApplicationState {
     lateinit var device: VkDevice
     var queueFamilyIndex: Int? = null
 
+    // TODO Experiment with this later (and check physical device limits)
+    val sampleCount = VK_SAMPLE_COUNT_1_BIT
+
+    var basicRenderPass: Long? = null
     var basicPipeline: Long? = null
     var basicPipelineLayout: Long? = null
     var basicDescriptorSetLayout: Long? = null

@@ -37,12 +37,11 @@ fun createBasicGraphicsPipeline(appState: ApplicationState, ciPipeline: VkGraphi
     // TODO Tessellation
     ciPipeline.pViewportState(createBasicViewportState(stack))
     ciPipeline.pRasterizationState(createBasicRasterizationState(stack))
-    ciPipeline.pMultisampleState(createBasicMultisampleState(stack))
+    ciPipeline.pMultisampleState(createBasicMultisampleState(appState, stack))
     ciPipeline.pDepthStencilState(createBasicDepthStencilState(stack))
     ciPipeline.pColorBlendState(null)
     ciPipeline.layout(appState.basicPipelineLayout!!)
-
-    // TODO renderpass
+    ciPipeline.renderPass(appState.basicRenderPass!!)
     ciPipeline.subpass(0)
 }
 

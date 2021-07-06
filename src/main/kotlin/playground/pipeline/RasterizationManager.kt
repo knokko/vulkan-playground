@@ -5,6 +5,7 @@ import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkPipelineMultisampleStateCreateInfo
 import org.lwjgl.vulkan.VkPipelineRasterizationStateCreateInfo
 import org.lwjgl.vulkan.VkPipelineViewportStateCreateInfo
+import playground.ApplicationState
 
 fun createBasicViewportState(stack: MemoryStack): VkPipelineViewportStateCreateInfo {
     val ciViewport = VkPipelineViewportStateCreateInfo.callocStack(stack)
@@ -33,10 +34,10 @@ fun createBasicRasterizationState(stack: MemoryStack): VkPipelineRasterizationSt
     return ciRasterization
 }
 
-fun createBasicMultisampleState(stack: MemoryStack): VkPipelineMultisampleStateCreateInfo {
+fun createBasicMultisampleState(appState: ApplicationState, stack: MemoryStack): VkPipelineMultisampleStateCreateInfo {
     val ciMultisample = VkPipelineMultisampleStateCreateInfo.callocStack(stack)
     ciMultisample.sType(VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO)
-    ciMultisample.rasterizationSamples(VK_SAMPLE_COUNT_4_BIT)
+    ciMultisample.rasterizationSamples(appState.sampleCount)
     ciMultisample.sampleShadingEnable(false)
     ciMultisample.pSampleMask(null)
     ciMultisample.alphaToCoverageEnable(false)

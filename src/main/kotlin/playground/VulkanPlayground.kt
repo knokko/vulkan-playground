@@ -15,6 +15,7 @@ fun main() {
         initWindowSurface(appState)
         choosePhysicalDevice(appState)
         initLogicalDevice(appState)
+        createRenderPasses(appState)
         createGraphicsPipelines(appState)
 
         openWindow(appState)
@@ -28,6 +29,7 @@ fun main() {
 
     // Ensure that all resources are always destroyed
     destroyGraphicsPipelines(appState)
+    destroyRenderPasses(appState)
     destroyLogicalDevice(appState)
     destroyInstance(appState)
     destroyWindow(appState)
