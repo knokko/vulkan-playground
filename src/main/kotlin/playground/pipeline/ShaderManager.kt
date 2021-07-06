@@ -27,11 +27,11 @@ fun createBasicShaders(appState: ApplicationState, stack: MemoryStack): VkPipeli
 }
 
 fun createShaderModule(appState: ApplicationState, stack: MemoryStack, stage: String, name: String): Long {
-    val vertexByteCode = mallocBundledResource("shaders/$name.$stage.spv")
+    val shaderByteCode = mallocBundledResource("shaders/$name.$stage.spv")
 
     val ciShaderModule = VkShaderModuleCreateInfo.callocStack(stack)
     ciShaderModule.sType(VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO)
-    ciShaderModule.pCode(vertexByteCode)
+    ciShaderModule.pCode(shaderByteCode)
 
     val pShaderModule = stack.callocLong(1)
     assertSuccess(
@@ -39,6 +39,6 @@ fun createShaderModule(appState: ApplicationState, stack: MemoryStack, stage: St
         "CreateShaderModule", stage
     )
 
-    memFree(vertexByteCode)
+    memFree(shaderByteCode)
     return pShaderModule[0]
 }

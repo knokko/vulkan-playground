@@ -8,7 +8,7 @@ import org.lwjgl.vulkan.VkDeviceQueueCreateInfo
 import org.lwjgl.vulkan.VkQueueFamilyProperties
 
 fun initLogicalDevice(appState: ApplicationState) {
-    stackPush().use {stack -> {
+    stackPush().use { stack ->
 
         val pNumQueueFamilies = stack.callocInt(1)
         vkGetPhysicalDeviceQueueFamilyProperties(appState.physicalDevice, pNumQueueFamilies, null)
@@ -50,7 +50,7 @@ fun initLogicalDevice(appState: ApplicationState) {
         assertSuccess(vkCreateDevice(appState.physicalDevice, ciDevice, null, pDevice), "CreateDevice")
         appState.device = VkDevice(pDevice.get(0), appState.physicalDevice, ciDevice)
         appState.queueFamilyIndex = firstGraphicsFamilyIndex
-    }}
+    }
 }
 
 fun destroyLogicalDevice(appState: ApplicationState) {

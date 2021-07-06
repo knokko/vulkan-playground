@@ -23,6 +23,8 @@ class ApplicationState {
     var queueFamilyIndex: Int? = null
 
     var basicPipeline: Long? = null
+    var basicPipelineLayout: Long? = null
+    var basicDescriptorSetLayout: Long? = null
 
     fun destroyInstance() {
         if (this::instance.isInitialized) {
