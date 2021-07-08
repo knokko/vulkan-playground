@@ -2,6 +2,7 @@ package playground
 
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWVulkan.glfwCreateWindowSurface
+import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.system.MemoryUtil.NULL
 import java.lang.RuntimeException
@@ -32,6 +33,13 @@ fun initWindowSurface(appState: ApplicationState) {
 
 fun openWindow(appState: ApplicationState) {
     glfwShowWindow(appState.window!!)
+}
+
+fun getWindowSize(appState: ApplicationState, stack: MemoryStack): Pair<Int, Int> {
+    val pWidth = stack.callocInt(1)
+    val pHeight = stack.callocInt(1)
+    glfwGetWindowSize(appState.window!!, pWidth, pHeight)
+    return Pair(pWidth[0], pHeight[0])
 }
 
 fun closeWindow(appState: ApplicationState) {

@@ -3,10 +3,12 @@ package playground
 import org.lwjgl.glfw.GLFWVulkan.glfwGetPhysicalDevicePresentationSupport
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.*
+import org.lwjgl.vulkan.KHRDrawIndirectCount.VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME
+import org.lwjgl.vulkan.KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import java.nio.ByteBuffer
 
-val requiredDeviceExtensions = arrayOf("VK_KHR_draw_indirect_count")
+val requiredDeviceExtensions = arrayOf(VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME)
 
 private class DeviceScore {
     lateinit var name: String

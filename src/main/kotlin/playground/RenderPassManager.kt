@@ -17,7 +17,7 @@ fun createBasicRenderPass(appState: ApplicationState) {
         val attachments = VkAttachmentDescription.callocStack(2, stack)
 
         val colorAttachment = attachments[0]
-        colorAttachment.format(appState.colorFormat)
+        colorAttachment.format(appState.swapchainColorFormat!!)
         colorAttachment.samples(appState.sampleCount)
         colorAttachment.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
         colorAttachment.storeOp(VK_ATTACHMENT_STORE_OP_STORE)

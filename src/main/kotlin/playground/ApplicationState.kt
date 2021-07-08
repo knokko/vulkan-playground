@@ -12,6 +12,8 @@ class ApplicationState {
 
     var window: Long? = null
     var windowSurface: Long? = null
+    var swapchain: Long? = null
+    var swapchainColorFormat: Int? = null
 
     lateinit var instance: VkInstance
     var debugCallback: Long? = null

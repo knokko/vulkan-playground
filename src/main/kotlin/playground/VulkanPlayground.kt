@@ -15,6 +15,7 @@ fun main() {
         initWindowSurface(appState)
         choosePhysicalDevice(appState)
         initLogicalDevice(appState)
+        createSwapchain(appState)
         createRenderPasses(appState)
         createGraphicsPipelines(appState)
 
@@ -30,6 +31,7 @@ fun main() {
     // Ensure that all resources are always destroyed
     destroyGraphicsPipelines(appState)
     destroyRenderPasses(appState)
+    destroySwapchain(appState)
     destroyLogicalDevice(appState)
     destroyInstance(appState)
     destroyWindow(appState)
