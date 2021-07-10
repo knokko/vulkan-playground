@@ -17,7 +17,7 @@ fun createBasicPipelineLayout(appState: ApplicationState, stack: MemoryStack) {
     ciCameraMatrix.stageFlags(VK_SHADER_STAGE_VERTEX_BIT)
 
     val ciTransformationMatrices = bindings[1]
-    ciTransformationMatrices.binding(0)
+    ciTransformationMatrices.binding(1)
     ciTransformationMatrices.descriptorType(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
     ciTransformationMatrices.descriptorCount(1)
     ciTransformationMatrices.stageFlags(VK_SHADER_STAGE_VERTEX_BIT)
@@ -32,12 +32,6 @@ fun createBasicPipelineLayout(appState: ApplicationState, stack: MemoryStack) {
         "CreateDescriptorSetLayout", "basic"
     )
     appState.basicDescriptorSetLayout = pSetLayouts[0]
-
-    val pCameraMatrix = stack.callocLong(1)
-    assertSuccess(
-        vkCreateDescriptorSetLayout(appState.device, ciSetLayouts, null, pCameraMatrix),
-        "CreateDescriptorSetLayout", "cameraMatrix"
-    )
 
     val ciLayout = VkPipelineLayoutCreateInfo.callocStack(stack)
     ciLayout.sType(VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO)

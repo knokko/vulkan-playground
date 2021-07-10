@@ -64,6 +64,8 @@ fun createSwapchain(appState: ApplicationState) {
             val (width, height) = getWindowSize(appState, stack)
             swapchainExtent.set(width, height)
         }
+        appState.swapchainWidth = swapchainExtent.width()
+        appState.swapchainHeight = swapchainExtent.height()
 
         val ciSwapchain = VkSwapchainCreateInfoKHR.callocStack(stack)
         ciSwapchain.sType(VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR)
@@ -87,6 +89,22 @@ fun createSwapchain(appState: ApplicationState) {
             "CreateSwapchainKHR"
         )
         appState.swapchain = pSwapchain[0]
+
+        val pNumImages = stack.callocInt(1)
+        assertSuccess(
+            vkGetSwapchainImagesKHR(appState.device, appState.swapchain!!, pNumImages, null),
+            "GetSwapchainImagesKHR", "count"
+        )
+        val numImages = pNumImages[0]
+
+        val images = stack.callocLong(numImages)
+        assertSuccess(
+            vkGetSwapchainImagesKHR(appState.device, appState.swapchain!!, pNumImages, images),
+            "GetSwapchainImagesKHR", "images"
+        )
+
+        val imagesArray = Array(numImages) {index -> images[index]}
+        appState.swapchainImages = imagesArray
     }
 }
 

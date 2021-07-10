@@ -12,14 +12,14 @@ fun createBasicShaders(appState: ApplicationState, stack: MemoryStack): VkPipeli
     val vertexStage = ciShaderStages[0]
     vertexStage.sType(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO)
     vertexStage.flags(0)
-    vertexStage.stage(VK_PIPELINE_STAGE_VERTEX_SHADER_BIT)
+    vertexStage.stage(VK_SHADER_STAGE_VERTEX_BIT)
     vertexStage.module(createShaderModule(appState, stack, "vert", "basic"))
     vertexStage.pName(stack.UTF8("main"))
 
     val fragmentStage = ciShaderStages[1]
     fragmentStage.sType(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO)
     fragmentStage.flags(0)
-    fragmentStage.stage(VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT)
+    fragmentStage.stage(VK_SHADER_STAGE_FRAGMENT_BIT)
     fragmentStage.module(createShaderModule(appState, stack, "frag", "basic"))
     fragmentStage.pName(stack.UTF8("main"))
 

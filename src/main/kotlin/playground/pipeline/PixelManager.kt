@@ -2,6 +2,8 @@ package playground.pipeline
 
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.vulkan.VkPipelineColorBlendAttachmentState
+import org.lwjgl.vulkan.VkPipelineColorBlendStateCreateInfo
 import org.lwjgl.vulkan.VkPipelineDepthStencilStateCreateInfo
 
 fun createBasicDepthStencilState(stack: MemoryStack): VkPipelineDepthStencilStateCreateInfo {
@@ -14,4 +16,20 @@ fun createBasicDepthStencilState(stack: MemoryStack): VkPipelineDepthStencilStat
     ciDepthStencil.stencilTestEnable(false)
 
     return ciDepthStencil
+}
+
+fun createBasicColorBlendState(stack: MemoryStack): VkPipelineColorBlendStateCreateInfo {
+    val attachments = VkPipelineColorBlendAttachmentState.callocStack(1, stack)
+    val attachment = attachments[0]
+    attachment.blendEnable(false)
+    attachment.colorWriteMask(
+        VK_COLOR_COMPONENT_R_BIT or VK_COLOR_COMPONENT_G_BIT or VK_COLOR_COMPONENT_B_BIT or VK_COLOR_COMPONENT_A_BIT
+    )
+
+    val ciBlend = VkPipelineColorBlendStateCreateInfo.callocStack(stack)
+    ciBlend.sType(VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO)
+    ciBlend.logicOpEnable(false)
+    ciBlend.pAttachments(attachments)
+
+    return ciBlend
 }

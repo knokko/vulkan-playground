@@ -4,6 +4,7 @@ import org.lwjgl.glfw.GLFWVulkan.glfwGetPhysicalDevicePresentationSupport
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRDrawIndirectCount.VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME
+import org.lwjgl.vulkan.KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR
 import org.lwjgl.vulkan.KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import java.nio.ByteBuffer
@@ -93,8 +94,14 @@ fun choosePhysicalDevice(appState: ApplicationState) {
                 val queueFamilyProps = pQueueFamilyProps[familyIndex]
                 if (queueFamilyProps.queueFlags() and VK_QUEUE_GRAPHICS_BIT != 0) {
                     if (glfwGetPhysicalDevicePresentationSupport(appState.instance, device, familyIndex)) {
-                        scores[index].hasSuitableGraphicsQueue = true
-                        break
+
+                        val pSupported = stack.callocInt(1)
+                        vkGetPhysicalDeviceSurfaceSupportKHR(device, familyIndex, appState.windowSurface!!, pSupported)
+
+                        if (pSupported[0] == VK_TRUE) {
+                            scores[index].hasSuitableGraphicsQueue = true
+                            break
+                        }
                     }
                 }
             }

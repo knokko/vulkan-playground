@@ -5,6 +5,7 @@ import org.lwjgl.glfw.GLFWVulkan.glfwCreateWindowSurface
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.system.MemoryUtil.NULL
+import org.lwjgl.vulkan.KHRSurface.vkDestroySurfaceKHR
 import java.lang.RuntimeException
 
 fun initWindow(appState: ApplicationState) {
@@ -49,6 +50,12 @@ fun closeWindow(appState: ApplicationState) {
 fun shouldCloseWindow(appState: ApplicationState): Boolean {
     glfwPollEvents()
     return glfwWindowShouldClose(appState.window!!)
+}
+
+fun destroyWindowSurface(appState: ApplicationState) {
+    if (appState.windowSurface != null) {
+        vkDestroySurfaceKHR(appState.instance, appState.windowSurface!!, null)
+    }
 }
 
 fun destroyWindow(appState: ApplicationState) {

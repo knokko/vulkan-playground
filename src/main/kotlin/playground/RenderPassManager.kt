@@ -25,12 +25,12 @@ fun createBasicRenderPass(appState: ApplicationState) {
         colorAttachment.finalLayout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
 
         val depthAttachment = attachments[1]
-        depthAttachment.format(appState.depthFormat)
+        depthAttachment.format(appState.depthFormat!!)
         depthAttachment.samples(appState.sampleCount)
         depthAttachment.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
         depthAttachment.storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)
         depthAttachment.initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
-        depthAttachment.finalLayout(VK_IMAGE_LAYOUT_UNDEFINED)
+        depthAttachment.finalLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
 
         val refColorAttachments = VkAttachmentReference.callocStack(1, stack)
         val refColorAttachment = refColorAttachments[0]

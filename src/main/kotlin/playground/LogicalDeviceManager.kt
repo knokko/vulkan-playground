@@ -30,7 +30,6 @@ fun initLogicalDevice(appState: ApplicationState) {
         val pCiQueues = VkDeviceQueueCreateInfo.callocStack(1, stack)
         val ciQueue = pCiQueues[0]
         ciQueue.sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
-        ciQueue.flags(VK_QUEUE_GRAPHICS_BIT or VK_QUEUE_TRANSFER_BIT)
         ciQueue.queueFamilyIndex(firstGraphicsFamilyIndex)
         // We will only use 1 queue (we are planning to minimise the number of queue submits anyway)
         ciQueue.pQueuePriorities(stack.floats(0.5f))

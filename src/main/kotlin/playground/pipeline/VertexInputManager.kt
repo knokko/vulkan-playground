@@ -35,7 +35,7 @@ fun createBasicVertexInputState(stack: MemoryStack): VkPipelineVertexInputStateC
     val attributeMatrixIndex = attributes[3]
     attributeMatrixIndex.location(3)
     attributeMatrixIndex.binding(0)
-    attributeMatrixIndex.format(VK_FORMAT_R32_UINT)
+    attributeMatrixIndex.format(VK_FORMAT_R32_SINT)
     attributeMatrixIndex.offset(BasicVertex.OFFSET_MATRIX_INDEX)
 
     val ciVertexInput = VkPipelineVertexInputStateCreateInfo.callocStack(stack)

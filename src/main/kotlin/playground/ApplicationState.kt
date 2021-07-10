@@ -13,7 +13,15 @@ class ApplicationState {
     var window: Long? = null
     var windowSurface: Long? = null
     var swapchain: Long? = null
+    lateinit var swapchainImages: Array<Long>
     var swapchainColorFormat: Int? = null
+    var swapchainWidth: Int? = null
+    var swapchainHeight: Int? = null
+
+    var depthImage: Long? = null
+    var depthImageView: Long? = null
+    var depthFormat: Int? = null
+    var resolutionDependantMemory: Long? = null
 
     lateinit var instance: VkInstance
     var debugCallback: Long? = null

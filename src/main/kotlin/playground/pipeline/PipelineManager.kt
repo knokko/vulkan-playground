@@ -40,7 +40,7 @@ fun createBasicGraphicsPipeline(appState: ApplicationState, ciPipeline: VkGraphi
     ciPipeline.pRasterizationState(createBasicRasterizationState(stack))
     ciPipeline.pMultisampleState(createBasicMultisampleState(appState, stack))
     ciPipeline.pDepthStencilState(createBasicDepthStencilState(stack))
-    ciPipeline.pColorBlendState(null)
+    ciPipeline.pColorBlendState(createBasicColorBlendState(stack))
     ciPipeline.pDynamicState(createBasicDynamicState(stack))
     ciPipeline.layout(appState.basicPipelineLayout!!)
     ciPipeline.renderPass(appState.basicRenderPass!!)
