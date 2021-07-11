@@ -9,6 +9,8 @@ const val MAX_INDIRECT_DRAW_COUNT = 20
 
 val INDIRECT_DRAW_STRIDE = VkDrawIndexedIndirectCommand.SIZEOF
 
+const val MAX_NUM_TRANSFORMATION_MATRICES = 200
+
 // TODO Enable and check drawIndirectFirstInstance
 
 fun createIndirectDrawBuffer(appState: ApplicationState) {
@@ -31,36 +33,7 @@ fun createIndirectDrawBuffer(appState: ApplicationState) {
         val memRequirements = VkMemoryRequirements.callocStack(stack)
         vkGetBufferMemoryRequirements(appState.device, appState.indirectDrawBuffer!!, memRequirements)
 
-        val memProps = VkPhysicalDeviceMemoryProperties.callocStack(stack)
-        vkGetPhysicalDeviceMemoryProperties(appState.physicalDevice, memProps)
-
-        // Not the most logical place, but it is interesting too print the memory types & heaps
-        // TODO This gives quite interesting results. I should look for optimizations here later
-        println("There are ${memProps.memoryTypeCount()} memory types:")
-        for (index in 0 until memProps.memoryTypeCount()) {
-            println("Type $index: flags are ${memProps.memoryTypes(index).propertyFlags()} at heap ${memProps.memoryTypes(index).heapIndex()}")
-        }
-        println()
-
-        println("There are ${memProps.memoryHeapCount()} memory heaps:")
-        for (index in 0 until memProps.memoryHeapCount()) {
-            println("Heap $index: flags are ${memProps.memoryHeaps(index).flags()} and size is ${memProps.memoryHeaps(index).size()}")
-        }
-        println()
-
-        val memoryTypeIndex = run {
-            for (index in 0 until memProps.memoryTypeCount()) {
-                if (((1 shl index) and memRequirements.memoryTypeBits()) != 0) {
-
-                    val flags = memProps.memoryTypes(index).propertyFlags()
-                    if ((flags and VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) != 0) {
-                        return@run index
-                    }
-                }
-            }
-
-            throw RuntimeException("Can't find a memory type index that supports indirect buffers and is visible by host")
-        }
+        val memoryTypeIndex = chooseMemoryTypeIndex(appState.physicalDevice, memRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)!!
 
         val aiIndirectMemory = VkMemoryAllocateInfo.callocStack(stack)
         aiIndirectMemory.sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)

@@ -111,6 +111,19 @@ fun choosePhysicalDevice(appState: ApplicationState) {
             for (heapIndex in 0 until memoryProps.memoryHeapCount()) {
                 scores[index].memorySize += memoryProps.memoryHeaps(heapIndex).size()
             }
+
+            // TODO This gives quite interesting results. I should look for optimizations here later
+            println("There are ${memoryProps.memoryTypeCount()} memory types:")
+            for (memIndex in 0 until memoryProps.memoryTypeCount()) {
+                println("Type $index: flags are ${memoryProps.memoryTypes(memIndex).propertyFlags()} at heap ${memoryProps.memoryTypes(memIndex).heapIndex()}")
+            }
+            println()
+
+            println("There are ${memoryProps.memoryHeapCount()} memory heaps:")
+            for (memIndex in 0 until memoryProps.memoryHeapCount()) {
+                println("Heap $index: flags are ${memoryProps.memoryHeaps(memIndex).flags()} and size is ${memoryProps.memoryHeaps(memIndex).size()}")
+            }
+            println()
         }
         println()
 

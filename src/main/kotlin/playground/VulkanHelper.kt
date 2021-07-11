@@ -1,6 +1,11 @@
 package playground
 
+import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.system.MemoryUtil.memAlloc
+import org.lwjgl.vulkan.VK10.vkGetPhysicalDeviceMemoryProperties
+import org.lwjgl.vulkan.VkMemoryRequirements
+import org.lwjgl.vulkan.VkPhysicalDevice
+import org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties
 import java.lang.RuntimeException
 import java.nio.ByteBuffer
 import java.util.*
@@ -33,4 +38,22 @@ fun mallocBundledResource(path: String): ByteBuffer {
     buffer.position(0)
 
     return buffer
+}
+
+fun chooseMemoryTypeIndex(device: VkPhysicalDevice, requirements: VkMemoryRequirements, requiredPropertyFlags: Int): Int? {
+    stackPush().use { stack ->
+        val memoryProps = VkPhysicalDeviceMemoryProperties.callocStack(stack)
+        vkGetPhysicalDeviceMemoryProperties(device, memoryProps)
+
+        for (memTypeIndex in 0 until memoryProps.memoryTypeCount()) {
+            if (((1 shl memTypeIndex) and requirements.memoryTypeBits()) != 0) {
+                val availablePropertyFlags = memoryProps.memoryTypes(memTypeIndex).propertyFlags() and requiredPropertyFlags
+                if (availablePropertyFlags == requiredPropertyFlags) {
+                    return memTypeIndex
+                }
+            }
+        }
+
+        return null
+    }
 }

@@ -42,6 +42,11 @@ class ApplicationState {
     var basicDescriptorPool: Long? = null
     var basicDescriptorSet: Long? = null
 
+    var uniformBuffer: Long? = null
+    var uniformMemory: Long? = null
+    var storageBuffer: Long? = null
+    var storageMemory: Long? = null
+
     var bufferCopyCommandPool: Long? = null
     var staticDrawCommandPool: Long? = null
 

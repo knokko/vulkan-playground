@@ -1,11 +1,12 @@
 package playground
 
-import playground.command.createCommandResources
-import playground.command.destroyCommandResources
+import playground.command.*
 import playground.image.*
 import playground.pipeline.createGraphicsPipelines
 import playground.pipeline.destroyBasicPipelineLayout
 import playground.pipeline.destroyGraphicsPipelines
+import playground.vertex.createVertexBuffers
+import playground.vertex.destroyVertexBuffers
 import java.lang.Exception
 import java.lang.Thread.sleep
 
@@ -26,7 +27,10 @@ fun main() {
         createGraphicsPipelines(appState)
         createDescriptorSets(appState)
         createIndirectDrawBuffer(appState)
-        createCommandResources(appState)
+        createBufferCopyCommandPool(appState)
+        createVertexBuffers(appState)
+        createStaticDrawingCommandPool(appState)
+        createStaticDrawCommandBuffers(appState)
 
         openWindow(appState)
         while (!shouldCloseWindow(appState)) {
@@ -38,7 +42,9 @@ fun main() {
     }
 
     // Ensure that all resources are always destroyed
-    destroyCommandResources(appState)
+    destroyStaticDrawCommandBuffers(appState)
+    destroyCommandPools(appState)
+    destroyVertexBuffers(appState)
     destroyIndirectDrawBuffer(appState)
     destroyDescriptorSets(appState)
     destroyResolutionDependantImageResources(appState)

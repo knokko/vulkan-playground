@@ -6,11 +6,6 @@ import org.lwjgl.vulkan.VkCommandPoolCreateInfo
 import playground.ApplicationState
 import playground.assertSuccess
 
-fun createCommandPools(appState: ApplicationState) {
-    createStaticDrawingCommandPool(appState)
-    createBufferCopyCommandPool(appState)
-}
-
 fun createBufferCopyCommandPool(appState: ApplicationState) {
     stackPush().use { stack ->
         val ciCopyPool = VkCommandPoolCreateInfo.callocStack(stack)

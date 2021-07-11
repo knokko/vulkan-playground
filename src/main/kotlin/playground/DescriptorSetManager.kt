@@ -1,13 +1,96 @@
 package playground
 
 import org.lwjgl.system.MemoryStack.stackPush
+import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.vulkan.VkDescriptorPoolCreateInfo
-import org.lwjgl.vulkan.VkDescriptorPoolSize
-import org.lwjgl.vulkan.VkDescriptorSetAllocateInfo
 
 fun createDescriptorSets(appState: ApplicationState) {
+    createUniformBuffer(appState)
+    createStorageBuffer(appState)
     createBasicDescriptorSet(appState)
+}
+
+fun createUniformBuffer(appState: ApplicationState) {
+    stackPush().use { stack ->
+
+        val ciBuffer = VkBufferCreateInfo.callocStack(stack)
+        ciBuffer.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
+        // Currently just 1 matrix of 4 x 4 floats consisting of 4 bytes each
+        ciBuffer.size(4 * 4 * 4)
+        ciBuffer.usage(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+        ciBuffer.sharingMode(VK_SHARING_MODE_EXCLUSIVE)
+
+        val pBuffer = stack.callocLong(1)
+        assertSuccess(
+            vkCreateBuffer(appState.device, ciBuffer, null, pBuffer),
+            "CreateBuffer", "uniform"
+        )
+        appState.uniformBuffer = pBuffer[0]
+
+        val requirements = VkMemoryRequirements.callocStack(stack)
+        vkGetBufferMemoryRequirements(appState.device, appState.uniformBuffer!!, requirements)
+
+        val memoryTypeIndex = chooseMemoryTypeIndex(appState.physicalDevice, requirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)!!
+
+        val aiMemory = VkMemoryAllocateInfo.callocStack(stack)
+        aiMemory.sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
+        aiMemory.allocationSize(requirements.size())
+        aiMemory.memoryTypeIndex(memoryTypeIndex)
+
+        val pMemory = stack.callocLong(1)
+        assertSuccess(
+            vkAllocateMemory(appState.device, aiMemory, null, pMemory),
+            "AllocateMemory", "uniform"
+        )
+        appState.uniformMemory = pMemory[0]
+
+        assertSuccess(
+            vkBindBufferMemory(appState.device, appState.uniformBuffer!!, appState.uniformMemory!!, 0),
+            "BindBufferMemory", "uniform"
+        )
+    }
+}
+
+fun createStorageBuffer(appState: ApplicationState) {
+    stackPush().use { stack ->
+
+        val ciBuffer = VkBufferCreateInfo.callocStack(stack)
+        ciBuffer.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
+        // Each transformation matrix consists of 4 x 4 floats of 4 bytes each
+        // Currently, nothing else is stored in the storage buffer
+        ciBuffer.size(MAX_NUM_TRANSFORMATION_MATRICES * 4L * 4 * 4)
+        ciBuffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)
+        ciBuffer.sharingMode(VK_SHARING_MODE_EXCLUSIVE)
+
+        val pBuffer = stack.callocLong(1)
+        assertSuccess(
+            vkCreateBuffer(appState.device, ciBuffer, null, pBuffer),
+            "CreateBuffer", "storage"
+        )
+        appState.storageBuffer = pBuffer[0]
+
+        val requirements = VkMemoryRequirements.callocStack(stack)
+        vkGetBufferMemoryRequirements(appState.device, appState.uniformBuffer!!, requirements)
+
+        val memoryTypeIndex = chooseMemoryTypeIndex(appState.physicalDevice, requirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)!!
+
+        val aiMemory = VkMemoryAllocateInfo.callocStack(stack)
+        aiMemory.sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
+        aiMemory.allocationSize(requirements.size())
+        aiMemory.memoryTypeIndex(memoryTypeIndex)
+
+        val pMemory = stack.callocLong(1)
+        assertSuccess(
+            vkAllocateMemory(appState.device, aiMemory, null, pMemory),
+            "AllocateMemory", "storage"
+        )
+        appState.storageMemory = pMemory[0]
+
+        assertSuccess(
+            vkBindBufferMemory(appState.device, appState.storageBuffer!!, appState.storageMemory!!, 0),
+            "BindBufferMemory", "storage"
+        )
+    }
 }
 
 fun createBasicDescriptorSet(appState: ApplicationState) {
@@ -46,6 +129,39 @@ fun createBasicDescriptorSet(appState: ApplicationState) {
             "AllocateDescriptorSets"
         )
         appState.basicDescriptorSet = pDescriptorSet[0]
+
+        val biUniforms = VkDescriptorBufferInfo.callocStack(1, stack)
+        val biUniform = biUniforms[0]
+        biUniform.buffer(appState.uniformBuffer!!)
+        biUniform.offset(0)
+        biUniform.range(VK_WHOLE_SIZE)
+
+        val biStorages = VkDescriptorBufferInfo.callocStack(1, stack)
+        val biStorage = biStorages[0]
+        biStorage.buffer(appState.storageBuffer!!)
+        biStorage.offset(0)
+        biStorage.range(VK_WHOLE_SIZE)
+
+        val descriptorWrites = VkWriteDescriptorSet.callocStack(2, stack)
+        val uniformWrite = descriptorWrites[0]
+        uniformWrite.sType(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET)
+        uniformWrite.dstSet(appState.basicDescriptorSet!!)
+        uniformWrite.dstBinding(0)
+        uniformWrite.dstArrayElement(0)
+        uniformWrite.descriptorCount(1)
+        uniformWrite.descriptorType(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+        uniformWrite.pBufferInfo(biUniforms)
+
+        val storageWrite = descriptorWrites[1]
+        storageWrite.sType(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET)
+        storageWrite.dstSet(appState.basicDescriptorSet!!)
+        storageWrite.dstBinding(1)
+        storageWrite.dstArrayElement(0)
+        storageWrite.descriptorCount(1)
+        storageWrite.descriptorType(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
+        storageWrite.pBufferInfo(biStorages)
+
+        vkUpdateDescriptorSets(appState.device, descriptorWrites, null)
     }
 }
 
@@ -53,5 +169,18 @@ fun destroyDescriptorSets(appState: ApplicationState) {
     // There is no need to free the basic descriptor set explicitly (it is not even allowed unless we set a flag)
     if (appState.basicDescriptorPool != null) {
         vkDestroyDescriptorPool(appState.device, appState.basicDescriptorPool!!, null)
+    }
+
+    if (appState.uniformBuffer != null) {
+        vkDestroyBuffer(appState.device, appState.uniformBuffer!!, null)
+    }
+    if (appState.uniformMemory != null) {
+        vkFreeMemory(appState.device, appState.uniformMemory!!, null)
+    }
+    if (appState.storageBuffer != null) {
+        vkDestroyBuffer(appState.device, appState.storageBuffer!!, null)
+    }
+    if (appState.storageMemory != null) {
+        vkFreeMemory(appState.device, appState.storageMemory!!, null)
     }
 }

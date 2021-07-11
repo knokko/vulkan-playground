@@ -9,10 +9,6 @@ import playground.INDIRECT_DRAW_STRIDE
 import playground.MAX_INDIRECT_DRAW_COUNT
 import playground.assertSuccess
 
-fun createCommandBuffers(appState: ApplicationState) {
-    createStaticDrawCommandBuffers(appState)
-}
-
 fun createStaticDrawCommandBuffers(appState: ApplicationState) {
     stackPush().use { stack ->
         val aiDrawCommand = VkCommandBufferAllocateInfo.callocStack(stack)
@@ -97,6 +93,6 @@ fun createStaticDrawCommandBuffers(appState: ApplicationState) {
     }
 }
 
-fun destroyCommandBuffers(appState: ApplicationState) {
+fun destroyStaticDrawCommandBuffers(appState: ApplicationState) {
     appState.destroyStaticDrawCommandBuffers()
 }
