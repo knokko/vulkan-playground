@@ -1,6 +1,7 @@
 package playground
 
 import org.lwjgl.glfw.GLFWVulkan.glfwGetPhysicalDevicePresentationSupport
+import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRDrawIndirectCount.VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME
@@ -92,17 +93,9 @@ fun choosePhysicalDevice(appState: ApplicationState) {
             vkGetPhysicalDeviceQueueFamilyProperties(device, pNumQueueFamilies, pQueueFamilyProps)
             for (familyIndex in 0 until numQueueFamilies) {
                 val queueFamilyProps = pQueueFamilyProps[familyIndex]
-                if (queueFamilyProps.queueFlags() and VK_QUEUE_GRAPHICS_BIT != 0) {
-                    if (glfwGetPhysicalDevicePresentationSupport(appState.instance, device, familyIndex)) {
-
-                        val pSupported = stack.callocInt(1)
-                        vkGetPhysicalDeviceSurfaceSupportKHR(device, familyIndex, appState.windowSurface!!, pSupported)
-
-                        if (pSupported[0] == VK_TRUE) {
-                            scores[index].hasSuitableGraphicsQueue = true
-                            break
-                        }
-                    }
+                if (isGraphicsQueueFamilySuitable(appState, stack, device, familyIndex, queueFamilyProps)) {
+                    scores[index].hasSuitableGraphicsQueue = true
+                    break
                 }
             }
 
@@ -166,4 +159,23 @@ fun choosePhysicalDevice(appState: ApplicationState) {
         appState.physicalDevice = chosenDevice
         appState.deviceExtensions = chosenExtensions
     }
+}
+
+fun isGraphicsQueueFamilySuitable(
+    appState: ApplicationState, stack: MemoryStack,
+    device: VkPhysicalDevice, familyIndex: Int, queueFamilyProps: VkQueueFamilyProperties
+): Boolean {
+    if (queueFamilyProps.queueFlags() and VK_QUEUE_GRAPHICS_BIT != 0) {
+        if (glfwGetPhysicalDevicePresentationSupport(appState.instance, device, familyIndex)) {
+
+            val pSupported = stack.callocInt(1)
+            vkGetPhysicalDeviceSurfaceSupportKHR(device, familyIndex, appState.windowSurface!!, pSupported)
+
+            if (pSupported[0] == VK_TRUE) {
+                return true
+            }
+        }
+    }
+
+    return false
 }

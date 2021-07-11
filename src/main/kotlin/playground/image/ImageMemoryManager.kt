@@ -13,22 +13,37 @@ fun allocateResolutionDependantImageMemory(appState: ApplicationState) {
         val memoryProps = VkPhysicalDeviceMemoryProperties.callocStack(stack)
         vkGetPhysicalDeviceMemoryProperties(appState.physicalDevice, memoryProps)
 
-        val memoryTypeIndex = run {
-            for (memoryTypeIndex in 0 until memoryProps.memoryTypeCount()) {
+        val depthRequirements = VkMemoryRequirements.callocStack(stack)
+        vkGetImageMemoryRequirements(appState.device, appState.depthImage!!, depthRequirements)
 
-                // Our resolution-dependant images will only be used by the GPU
-                if ((memoryProps.memoryTypes(memoryTypeIndex)
-                        .propertyFlags() and VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) != 0
-                ) {
+        val supportedMemoryTypeBits = depthRequirements.memoryTypeBits()
+
+        val memoryTypeIndex = run {
+            var supportedMemoryIndex: Int? = null
+            for (memoryTypeIndex in 0 until memoryProps.memoryTypeCount()) {
+                val supportedByImages = ((1 shl memoryTypeIndex) and supportedMemoryTypeBits) != 0
+                val deviceLocal = (memoryProps.memoryTypes(memoryTypeIndex).propertyFlags() and VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) != 0
+
+                // Try to find a memory type index that is both supported and device local
+                if (supportedByImages && deviceLocal) {
                     return@run memoryTypeIndex
+                }
+
+                // Remember any supported memory type index in case we won't find any that is also device local
+                if (supportedByImages) {
+                    supportedMemoryIndex = memoryTypeIndex
                 }
             }
 
-            throw RuntimeException("No memory type has VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT")
+            supportedMemoryIndex!!
         }
 
-        val depthRequirements = VkMemoryRequirements.callocStack(stack)
-        vkGetImageMemoryRequirements(appState.device, appState.depthImage!!, depthRequirements)
+        val memoryType = memoryProps.memoryTypes(memoryTypeIndex)
+        println("Selected memory type for resolution-dependant images:")
+        println("property bits are ${memoryType.propertyFlags()}")
+        val memoryHeap = memoryProps.memoryHeaps(memoryType.heapIndex())
+        println("heap size is ${memoryHeap.size()} and heap flags are ${memoryHeap.flags()}")
+        println()
 
         // Currently, this is only used for the depth image memory, but I'm planning to add more in the future
         val offsetDepthMemory = 0L

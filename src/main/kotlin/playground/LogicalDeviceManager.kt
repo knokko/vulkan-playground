@@ -19,13 +19,16 @@ fun initLogicalDevice(appState: ApplicationState) {
 
         val firstGraphicsFamilyIndex = run {
             for (familyIndex in 0 until numQueueFamilies) {
-                if (pQueueFamilies[familyIndex].queueFlags() and VK_QUEUE_GRAPHICS_BIT != 0) {
+                if (isGraphicsQueueFamilySuitable(appState, stack, appState.physicalDevice, familyIndex, pQueueFamilies[familyIndex])) {
                     return@run familyIndex
                 }
             }
 
-            throw Error("The chosen physical device must have a graphics queue family")
+            throw Error("The chosen physical device must have a suitable graphics queue family")
         }
+
+        println("Picking queue family index $firstGraphicsFamilyIndex")
+        println()
 
         val pCiQueues = VkDeviceQueueCreateInfo.callocStack(1, stack)
         val ciQueue = pCiQueues[0]
@@ -38,6 +41,12 @@ fun initLogicalDevice(appState: ApplicationState) {
         for ((index, extension) in appState.deviceExtensions.withIndex()) {
             pExtensions.put(index, stack.UTF8(extension))
         }
+
+        println("Enabling ${appState.deviceExtensions.size} device extensions:")
+        for (extension in appState.deviceExtensions) {
+            println(extension)
+        }
+        println()
 
         val ciDevice = VkDeviceCreateInfo.callocStack(stack)
         ciDevice.sType(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO)
