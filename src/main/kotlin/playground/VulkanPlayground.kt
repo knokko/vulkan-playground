@@ -18,9 +18,7 @@ fun main() {
         choosePhysicalDevice(appState)
         initLogicalDevice(appState)
         createSwapchain(appState)
-        createDepthImage(appState)
-        allocateResolutionDependantImageMemory(appState)
-        createDepthImageView(appState)
+        createResolutionDependantImageResources(appState)
         createRenderPasses(appState)
         createGraphicsPipelines(appState)
 
@@ -34,9 +32,7 @@ fun main() {
     }
 
     // Ensure that all resources are always destroyed
-    destroyDepthImageView(appState)
-    destroyDepthImage(appState)
-    freeResolutionDependantImageMemory(appState)
+    destroyResolutionDependantImageResources(appState)
     destroyGraphicsPipelines(appState)
     destroyRenderPasses(appState)
     destroySwapchain(appState)

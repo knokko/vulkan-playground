@@ -14,6 +14,7 @@ class ApplicationState {
     var windowSurface: Long? = null
     var swapchain: Long? = null
     lateinit var swapchainImages: Array<Long>
+    lateinit var swapchainImageViews: Array<Long>
     var swapchainColorFormat: Int? = null
     var swapchainWidth: Int? = null
     var swapchainHeight: Int? = null
@@ -48,6 +49,14 @@ class ApplicationState {
     fun destroyDevice() {
         if (this::device.isInitialized) {
             vkDestroyDevice(device, null)
+        }
+    }
+
+    fun destroySwapchainImageViews() {
+        if (this::swapchainImageViews.isInitialized) {
+            for (swapchainImageView in swapchainImageViews) {
+                vkDestroyImageView(device, swapchainImageView, null)
+            }
         }
     }
 }
