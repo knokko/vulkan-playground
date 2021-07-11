@@ -1,12 +1,9 @@
 package playground
 
 import org.lwjgl.glfw.GLFW.glfwDestroyWindow
+import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.EXTDebugUtils.vkDestroyDebugUtilsMessengerEXT
 import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.vulkan.VkDebugUtilsMessengerCallbackEXT
-import org.lwjgl.vulkan.VkDevice
-import org.lwjgl.vulkan.VkInstance
-import org.lwjgl.vulkan.VkPhysicalDevice
 
 class ApplicationState {
 
@@ -40,10 +37,20 @@ class ApplicationState {
     var basicRenderPass: Long? = null
     var basicPipeline: Long? = null
     var basicPipelineLayout: Long? = null
+
     var basicDescriptorSetLayout: Long? = null
+    var basicDescriptorPool: Long? = null
+    var basicDescriptorSet: Long? = null
 
     var bufferCopyCommandPool: Long? = null
     var staticDrawCommandPool: Long? = null
+
+    lateinit var staticDrawCommandBuffers: Array<VkCommandBuffer>
+
+    var indirectDrawBuffer: Long? = null
+    var indirectMemory: Long? = null
+    var indirectDrawOffset: Long? = null
+    var indirectCountOffset: Long? = null
 
     fun destroyInstance() {
         if (this::instance.isInitialized) {
@@ -69,6 +76,14 @@ class ApplicationState {
         if (this::framebuffers.isInitialized) {
             for (framebuffer in framebuffers) {
                 vkDestroyFramebuffer(device, framebuffer, null)
+            }
+        }
+    }
+
+    fun destroyStaticDrawCommandBuffers() {
+        if (this::staticDrawCommandBuffers.isInitialized) {
+            for (buffer in staticDrawCommandBuffers) {
+                vkFreeCommandBuffers(device, staticDrawCommandPool!!, buffer)
             }
         }
     }

@@ -1,5 +1,7 @@
 package playground
 
+import playground.command.createCommandResources
+import playground.command.destroyCommandResources
 import playground.image.*
 import playground.pipeline.createGraphicsPipelines
 import playground.pipeline.destroyBasicPipelineLayout
@@ -20,7 +22,11 @@ fun main() {
         createSwapchain(appState)
         createResolutionDependantImageResources(appState)
         createRenderPasses(appState)
+        createFramebuffers(appState)
         createGraphicsPipelines(appState)
+        createDescriptorSets(appState)
+        createIndirectDrawBuffer(appState)
+        createCommandResources(appState)
 
         openWindow(appState)
         while (!shouldCloseWindow(appState)) {
@@ -32,8 +38,12 @@ fun main() {
     }
 
     // Ensure that all resources are always destroyed
+    destroyCommandResources(appState)
+    destroyIndirectDrawBuffer(appState)
+    destroyDescriptorSets(appState)
     destroyResolutionDependantImageResources(appState)
     destroyGraphicsPipelines(appState)
+    destroyFramebuffers(appState)
     destroyRenderPasses(appState)
     destroySwapchain(appState)
     destroyLogicalDevice(appState)
