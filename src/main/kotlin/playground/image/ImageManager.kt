@@ -7,9 +7,11 @@ fun createResolutionDependantImageResources(appState: ApplicationState) {
     allocateResolutionDependantImageMemory(appState)
     createSwapchainImageViews(appState)
     createDepthImageView(appState)
+    createFramebuffers(appState)
 }
 
 fun destroyResolutionDependantImageResources(appState: ApplicationState) {
+    destroyFramebuffers(appState)
     destroyDepthImageView(appState)
     destroySwapchainImageViews(appState)
     destroyDepthImage(appState)

@@ -24,6 +24,8 @@ class ApplicationState {
     var depthFormat: Int? = null
     var resolutionDependantMemory: Long? = null
 
+    lateinit var framebuffers: Array<Long>
+
     lateinit var instance: VkInstance
     var debugCallback: Long? = null
 
@@ -39,6 +41,9 @@ class ApplicationState {
     var basicPipeline: Long? = null
     var basicPipelineLayout: Long? = null
     var basicDescriptorSetLayout: Long? = null
+
+    var bufferCopyCommandPool: Long? = null
+    var staticDrawCommandPool: Long? = null
 
     fun destroyInstance() {
         if (this::instance.isInitialized) {
@@ -56,6 +61,14 @@ class ApplicationState {
         if (this::swapchainImageViews.isInitialized) {
             for (swapchainImageView in swapchainImageViews) {
                 vkDestroyImageView(device, swapchainImageView, null)
+            }
+        }
+    }
+
+    fun destroyFramebuffers() {
+        if (this::framebuffers.isInitialized) {
+            for (framebuffer in framebuffers) {
+                vkDestroyFramebuffer(device, framebuffer, null)
             }
         }
     }
