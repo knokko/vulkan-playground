@@ -1,6 +1,7 @@
 package playground
 
 import org.lwjgl.system.MemoryStack.stackPush
+import org.lwjgl.system.MemoryUtil.memByteBuffer
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 
@@ -13,10 +14,12 @@ fun createDescriptorSets(appState: ApplicationState) {
 fun createUniformBuffer(appState: ApplicationState) {
     stackPush().use { stack ->
 
+        // Currently just 1 matrix of 4 x 4 floats consisting of 4 bytes each
+        val uniformSize = 4 * 4 * 4
+
         val ciBuffer = VkBufferCreateInfo.callocStack(stack)
         ciBuffer.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
-        // Currently just 1 matrix of 4 x 4 floats consisting of 4 bytes each
-        ciBuffer.size(4 * 4 * 4)
+        ciBuffer.size(uniformSize.toLong())
         ciBuffer.usage(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
         ciBuffer.sharingMode(VK_SHARING_MODE_EXCLUSIVE)
 
@@ -48,17 +51,26 @@ fun createUniformBuffer(appState: ApplicationState) {
             vkBindBufferMemory(appState.device, appState.uniformBuffer!!, appState.uniformMemory!!, 0),
             "BindBufferMemory", "uniform"
         )
+
+        val ppUniformData = stack.callocPointer(1)
+        assertSuccess(
+            vkMapMemory(appState.device, appState.uniformMemory!!, 0, aiMemory.allocationSize(), 0, ppUniformData),
+            "MapMemory", "uniform"
+        )
+        appState.uniformData = memByteBuffer(ppUniformData[0], uniformSize)
     }
 }
 
 fun createStorageBuffer(appState: ApplicationState) {
     stackPush().use { stack ->
 
-        val ciBuffer = VkBufferCreateInfo.callocStack(stack)
-        ciBuffer.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
         // Each transformation matrix consists of 4 x 4 floats of 4 bytes each
         // Currently, nothing else is stored in the storage buffer
-        ciBuffer.size(MAX_NUM_TRANSFORMATION_MATRICES * 4L * 4 * 4)
+        val storageSize = MAX_NUM_TRANSFORMATION_MATRICES * 4 * 4 * 4
+
+        val ciBuffer = VkBufferCreateInfo.callocStack(stack)
+        ciBuffer.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
+        ciBuffer.size(storageSize.toLong())
         ciBuffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)
         ciBuffer.sharingMode(VK_SHARING_MODE_EXCLUSIVE)
 
@@ -90,6 +102,13 @@ fun createStorageBuffer(appState: ApplicationState) {
             vkBindBufferMemory(appState.device, appState.storageBuffer!!, appState.storageMemory!!, 0),
             "BindBufferMemory", "storage"
         )
+
+        val ppStorageData = stack.callocPointer(1)
+        assertSuccess(
+            vkMapMemory(appState.device, appState.storageMemory!!, 0, aiMemory.allocationSize(), 0, ppStorageData),
+            "MapMemory", "storage"
+        )
+        appState.storageData = memByteBuffer(ppStorageData[0], storageSize)
     }
 }
 
@@ -175,12 +194,14 @@ fun destroyDescriptorSets(appState: ApplicationState) {
         vkDestroyBuffer(appState.device, appState.uniformBuffer!!, null)
     }
     if (appState.uniformMemory != null) {
+        vkUnmapMemory(appState.device, appState.uniformMemory!!)
         vkFreeMemory(appState.device, appState.uniformMemory!!, null)
     }
     if (appState.storageBuffer != null) {
         vkDestroyBuffer(appState.device, appState.storageBuffer!!, null)
     }
     if (appState.storageMemory != null) {
+        vkUnmapMemory(appState.device, appState.storageMemory!!)
         vkFreeMemory(appState.device, appState.storageMemory!!, null)
     }
 }

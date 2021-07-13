@@ -124,7 +124,7 @@ fun fillVertexBuffers(appState: ApplicationState) {
             "MapMemory", "staging"
         )
 
-        val stagingData = memByteBuffer(ppStagingData[0], stagingMemorySize.toInt())
+        val stagingData = memByteBuffer(ppStagingData[0], (totalVertexSize + totalIndexSize).toInt())
         val vertices = BasicVertex.createArray(stagingData, 0, TOTAL_NUM_VERTICES)
 
         stagingData.position(totalVertexSize.toInt())

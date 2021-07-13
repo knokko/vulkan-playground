@@ -2,6 +2,7 @@ package playground
 
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
+import java.nio.ByteBuffer
 
 class ApplicationState {
 
@@ -40,8 +41,10 @@ class ApplicationState {
 
     var uniformBuffer: Long? = null
     var uniformMemory: Long? = null
+    lateinit var uniformData: ByteBuffer
     var storageBuffer: Long? = null
     var storageMemory: Long? = null
+    lateinit var storageData: ByteBuffer
 
     var vertexBuffer: Long? = null
     var vertexMemory: Long? = null
