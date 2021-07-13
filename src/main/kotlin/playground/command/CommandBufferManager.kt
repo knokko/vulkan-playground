@@ -8,6 +8,7 @@ import playground.ApplicationState
 import playground.INDIRECT_DRAW_STRIDE
 import playground.MAX_INDIRECT_DRAW_COUNT
 import playground.assertSuccess
+import playground.vertex.INDEX_TYPE
 
 fun createStaticDrawCommandBuffers(appState: ApplicationState) {
     stackPush().use { stack ->
@@ -67,7 +68,8 @@ fun createStaticDrawCommandBuffers(appState: ApplicationState) {
             vkCmdBindPipeline(drawBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, appState.basicPipeline!!)
             vkCmdSetViewport(drawBuffer, 0, viewports)
             vkCmdSetScissor(drawBuffer, 0, scissors)
-            // TODO Bind the vertex buffer and index buffer. These should be 'uber' buffers
+            vkCmdBindVertexBuffers(drawBuffer, 0, stack.longs(appState.vertexBuffer!!), stack.longs(0))
+            vkCmdBindIndexBuffer(drawBuffer, appState.indexBuffer!!, 0, INDEX_TYPE)
             vkCmdBindDescriptorSets(
                 drawBuffer,
                 VK_PIPELINE_BIND_POINT_GRAPHICS,

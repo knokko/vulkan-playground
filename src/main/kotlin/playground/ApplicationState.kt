@@ -1,8 +1,6 @@
 package playground
 
-import org.lwjgl.glfw.GLFW.glfwDestroyWindow
 import org.lwjgl.vulkan.*
-import org.lwjgl.vulkan.EXTDebugUtils.vkDestroyDebugUtilsMessengerEXT
 import org.lwjgl.vulkan.VK10.*
 
 class ApplicationState {
@@ -12,6 +10,7 @@ class ApplicationState {
     var swapchain: Long? = null
     lateinit var swapchainImages: Array<Long>
     lateinit var swapchainImageViews: Array<Long>
+    // TODO Create class for wrapping swapchain images
     var swapchainColorFormat: Int? = null
     var swapchainWidth: Int? = null
     var swapchainHeight: Int? = null
@@ -46,6 +45,11 @@ class ApplicationState {
     var uniformMemory: Long? = null
     var storageBuffer: Long? = null
     var storageMemory: Long? = null
+
+    var vertexBuffer: Long? = null
+    var vertexMemory: Long? = null
+    var indexBuffer: Long? = null
+    var indexMemory: Long? = null
 
     var bufferCopyCommandPool: Long? = null
     var staticDrawCommandPool: Long? = null
