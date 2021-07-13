@@ -70,7 +70,7 @@ fun createStorageBuffer(appState: ApplicationState) {
         appState.storageBuffer = pBuffer[0]
 
         val requirements = VkMemoryRequirements.callocStack(stack)
-        vkGetBufferMemoryRequirements(appState.device, appState.uniformBuffer!!, requirements)
+        vkGetBufferMemoryRequirements(appState.device, appState.storageBuffer!!, requirements)
 
         val memoryTypeIndex = chooseMemoryTypeIndex(appState.physicalDevice, requirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)!!
 
