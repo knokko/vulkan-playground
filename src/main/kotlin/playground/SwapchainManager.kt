@@ -103,7 +103,7 @@ fun createSwapchain(appState: ApplicationState) {
             "GetSwapchainImagesKHR", "images"
         )
 
-        val imagesArray = Array(numImages) {index -> images[index]}
+        val imagesArray = Array(numImages) {index -> SwapchainImage(images[index])}
         appState.swapchainImages = imagesArray
     }
 }

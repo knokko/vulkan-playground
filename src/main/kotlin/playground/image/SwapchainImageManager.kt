@@ -25,20 +25,16 @@ fun createSwapchainImageViews(appState: ApplicationState) {
         sr.layerCount(1)
         sr.baseArrayLayer(0)
 
-        val views = Array(appState.swapchainImages.size) { 0L }
-
-        for ((index, swapchainImage) in appState.swapchainImages.withIndex()) {
-            ciView.image(swapchainImage)
+        for (swapchainImage in appState.swapchainImages) {
+            ciView.image(swapchainImage.image)
 
             val pView = stack.callocLong(1)
             assertSuccess(
                 vkCreateImageView(appState.device, ciView, null, pView),
-                "CreateImageView", "swapchain $index"
+                "CreateImageView"
             )
-            views[index] = pView[0]
+            swapchainImage.view = pView[0]
         }
-
-        appState.swapchainImageViews = views
     }
 }
 

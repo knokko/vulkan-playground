@@ -16,14 +16,16 @@ fun createStaticDrawCommandBuffers(appState: ApplicationState) {
         aiDrawCommand.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO)
         aiDrawCommand.commandPool(appState.staticDrawCommandPool!!)
         aiDrawCommand.level(VK_COMMAND_BUFFER_LEVEL_PRIMARY)
-        aiDrawCommand.commandBufferCount(appState.framebuffers.size)
+        aiDrawCommand.commandBufferCount(appState.swapchainImages.size)
 
-        val pCommandBuffers = stack.callocPointer(appState.framebuffers.size)
+        val pCommandBuffers = stack.callocPointer(appState.swapchainImages.size)
         assertSuccess(
             vkAllocateCommandBuffers(appState.device, aiDrawCommand, pCommandBuffers),
             "AllocateCommandBuffers", "static draw"
         )
-        val drawBuffers = Array(appState.framebuffers.size) { index -> VkCommandBuffer(pCommandBuffers[index], appState.device) }
+        for ((index, swapchainImage) in appState.swapchainImages.withIndex()) {
+            swapchainImage.staticDrawCommandBuffer = VkCommandBuffer(pCommandBuffers[index], appState.device)
+        }
 
         val viewports = VkViewport.callocStack(1, stack)
         val viewport = viewports[0]
@@ -37,8 +39,8 @@ fun createStaticDrawCommandBuffers(appState: ApplicationState) {
         // scissor.offset will stay 0
         scissors[0].extent().set(appState.swapchainWidth!!, appState.swapchainHeight!!)
 
-        for (index in 0 until appState.framebuffers.size) {
-            val drawBuffer = drawBuffers[index]
+        for (swapchainImage in appState.swapchainImages) {
+            val drawBuffer = swapchainImage.staticDrawCommandBuffer
 
             val biDrawCommand = VkCommandBufferBeginInfo.callocStack(stack)
             biDrawCommand.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO)
@@ -59,7 +61,7 @@ fun createStaticDrawCommandBuffers(appState: ApplicationState) {
             val biRenderPass = VkRenderPassBeginInfo.callocStack(stack)
             biRenderPass.sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO)
             biRenderPass.renderPass(appState.basicRenderPass!!)
-            biRenderPass.framebuffer(appState.framebuffers[index])
+            biRenderPass.framebuffer(swapchainImage.framebuffer!!)
             // renderArea.offset will stay (0, 0)
             biRenderPass.renderArea().extent().set(appState.swapchainWidth!!, appState.swapchainHeight!!)
             biRenderPass.pClearValues(clearColors)
@@ -90,8 +92,6 @@ fun createStaticDrawCommandBuffers(appState: ApplicationState) {
             vkCmdEndRenderPass(drawBuffer)
             vkEndCommandBuffer(drawBuffer)
         }
-
-        appState.staticDrawCommandBuffers = drawBuffers
     }
 }
 

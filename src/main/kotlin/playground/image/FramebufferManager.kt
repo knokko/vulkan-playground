@@ -17,21 +17,17 @@ fun createFramebuffers(appState: ApplicationState) {
         ciFramebuffer.height(appState.swapchainHeight!!)
         ciFramebuffer.layers(1)
 
-        val framebuffers = Array(appState.swapchainImages.size) { 0L }
-
-        for (imageIndex in 0 until appState.swapchainImages.size) {
+        for (swapchainImage in appState.swapchainImages) {
             // We always use the same depth image because we do at most 1 rendering operation at a time
-            ciFramebuffer.pAttachments(stack.longs(appState.swapchainImageViews[imageIndex], appState.depthImageView!!))
+            ciFramebuffer.pAttachments(stack.longs(swapchainImage.view!!, appState.depthImageView!!))
 
             val pFramebuffer = stack.callocLong(1)
             assertSuccess(
                 vkCreateFramebuffer(appState.device, ciFramebuffer, null, pFramebuffer),
-                "CreateFramebuffer", "$imageIndex"
+                "CreateFramebuffer"
             )
-            framebuffers[imageIndex] = pFramebuffer[0]
+            swapchainImage.framebuffer = pFramebuffer[0]
         }
-
-        appState.framebuffers = framebuffers
     }
 }
 

@@ -8,9 +8,7 @@ class ApplicationState {
     var window: Long? = null
     var windowSurface: Long? = null
     var swapchain: Long? = null
-    lateinit var swapchainImages: Array<Long>
-    lateinit var swapchainImageViews: Array<Long>
-    // TODO Create class for wrapping swapchain images
+    lateinit var swapchainImages: Array<SwapchainImage>
     var swapchainColorFormat: Int? = null
     var swapchainWidth: Int? = null
     var swapchainHeight: Int? = null
@@ -19,8 +17,6 @@ class ApplicationState {
     var depthImageView: Long? = null
     var depthFormat: Int? = null
     var resolutionDependantMemory: Long? = null
-
-    lateinit var framebuffers: Array<Long>
 
     lateinit var instance: VkInstance
     var debugCallback: Long? = null
@@ -54,8 +50,6 @@ class ApplicationState {
     var bufferCopyCommandPool: Long? = null
     var staticDrawCommandPool: Long? = null
 
-    lateinit var staticDrawCommandBuffers: Array<VkCommandBuffer>
-
     var indirectDrawBuffer: Long? = null
     var indirectMemory: Long? = null
     var indirectDrawOffset: Long? = null
@@ -74,25 +68,29 @@ class ApplicationState {
     }
 
     fun destroySwapchainImageViews() {
-        if (this::swapchainImageViews.isInitialized) {
-            for (swapchainImageView in swapchainImageViews) {
-                vkDestroyImageView(device, swapchainImageView, null)
+        if (this::swapchainImages.isInitialized) {
+            for (swapchainImage in swapchainImages) {
+                if (swapchainImage.view != null) {
+                    vkDestroyImageView(device, swapchainImage.view!!, null)
+                }
             }
         }
     }
 
     fun destroyFramebuffers() {
-        if (this::framebuffers.isInitialized) {
-            for (framebuffer in framebuffers) {
-                vkDestroyFramebuffer(device, framebuffer, null)
+        if (this::swapchainImages.isInitialized) {
+            for (swapchainImage in swapchainImages) {
+                if (swapchainImage.framebuffer != null) {
+                    vkDestroyFramebuffer(device, swapchainImage.framebuffer!!, null)
+                }
             }
         }
     }
 
     fun destroyStaticDrawCommandBuffers() {
-        if (this::staticDrawCommandBuffers.isInitialized) {
-            for (buffer in staticDrawCommandBuffers) {
-                vkFreeCommandBuffers(device, staticDrawCommandPool!!, buffer)
+        if (this::swapchainImages.isInitialized) {
+            for (swapchainImage in swapchainImages) {
+                swapchainImage.destroyStaticDrawCommandBuffer(device, staticDrawCommandPool!!)
             }
         }
     }
