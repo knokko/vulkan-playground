@@ -25,6 +25,7 @@ class ApplicationState {
     lateinit var deviceExtensions: Set<String>
     lateinit var device: VkDevice
     var queueFamilyIndex: Int? = null
+    lateinit var graphicsQueue: VkQueue
 
     // TODO Experiment with this later (and check physical device limits)
     val sampleCount = VK_SAMPLE_COUNT_1_BIT
@@ -92,6 +93,14 @@ class ApplicationState {
             for (swapchainImage in swapchainImages) {
                 swapchainImage.destroyStaticDrawCommandBuffer(device, staticDrawCommandPool!!)
             }
+        }
+    }
+
+    fun waitGraphicsQueue() {
+        if (this::graphicsQueue.isInitialized) {
+            assertSuccess(
+                vkQueueWaitIdle(graphicsQueue), "QueueWaitIdle", "destroy graphics"
+            )
         }
     }
 }

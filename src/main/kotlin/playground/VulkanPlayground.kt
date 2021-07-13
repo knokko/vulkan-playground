@@ -3,10 +3,10 @@ package playground
 import playground.command.*
 import playground.image.*
 import playground.pipeline.createGraphicsPipelines
-import playground.pipeline.destroyBasicPipelineLayout
 import playground.pipeline.destroyGraphicsPipelines
 import playground.vertex.createVertexBuffers
 import playground.vertex.destroyVertexBuffers
+import playground.vertex.fillVertexBuffers
 import java.lang.Exception
 import java.lang.Thread.sleep
 
@@ -31,6 +31,8 @@ fun main() {
         createVertexBuffers(appState)
         createStaticDrawingCommandPool(appState)
         createStaticDrawCommandBuffers(appState)
+        getQueues(appState)
+        fillVertexBuffers(appState)
 
         openWindow(appState)
         while (!shouldCloseWindow(appState)) {
@@ -42,6 +44,7 @@ fun main() {
     }
 
     // Ensure that all resources are always destroyed
+    waitQueues(appState)
     destroyStaticDrawCommandBuffers(appState)
     destroyCommandPools(appState)
     destroyVertexBuffers(appState)
