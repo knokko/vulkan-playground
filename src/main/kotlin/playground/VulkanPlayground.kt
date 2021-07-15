@@ -36,7 +36,7 @@ fun main() {
 
         openWindow(appState)
         while (!shouldCloseWindow(appState)) {
-            sleep(16)
+            drawFrame(appState)
         }
         closeWindow(appState)
     } catch (trouble: Exception) {

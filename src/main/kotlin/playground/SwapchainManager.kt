@@ -1,11 +1,9 @@
 package playground
 
 import org.lwjgl.system.MemoryStack.stackPush
+import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSurface.*
 import org.lwjgl.vulkan.KHRSwapchain.*
-import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR
-import org.lwjgl.vulkan.VkSurfaceFormatKHR
-import org.lwjgl.vulkan.VkSwapchainCreateInfoKHR
 import org.lwjgl.vulkan.VK10.*
 
 fun createSwapchain(appState: ApplicationState) {
@@ -103,7 +101,33 @@ fun createSwapchain(appState: ApplicationState) {
             "GetSwapchainImagesKHR", "images"
         )
 
-        val imagesArray = Array(numImages) {index -> SwapchainImage(images[index])}
+        fun createSemaphore(): Long {
+            val ciSemaphore = VkSemaphoreCreateInfo.callocStack(stack)
+            ciSemaphore.sType(VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO)
+
+            val pSemaphore = stack.callocLong(1)
+            assertSuccess(
+                vkCreateSemaphore(appState.device, ciSemaphore, null, pSemaphore),
+                "CreateSemaphore", "swapchain image render"
+            )
+
+            return pSemaphore[0]
+        }
+
+        fun createFence(): Long {
+            val ciFence = VkFenceCreateInfo.callocStack(stack)
+            ciFence.sType(VK_STRUCTURE_TYPE_FENCE_CREATE_INFO)
+            ciFence.flags(VK_FENCE_CREATE_SIGNALED_BIT)
+
+            val pFence = stack.callocLong(1)
+            assertSuccess(
+                vkCreateFence(appState.device, ciFence, null, pFence),
+                "CreateFence"
+            )
+            return pFence[0]
+        }
+
+        val imagesArray = Array(numImages) { index -> SwapchainImage(images[index], createSemaphore(), createFence()) }
         appState.swapchainImages = imagesArray
     }
 }
@@ -111,5 +135,12 @@ fun createSwapchain(appState: ApplicationState) {
 fun destroySwapchain(appState: ApplicationState) {
     if (appState.swapchain != null) {
         vkDestroySwapchainKHR(appState.device, appState.swapchain!!, null)
+    }
+
+    if (appState.hasSwapchainImages()) {
+        for (swapchainImage in appState.swapchainImages) {
+            vkDestroySemaphore(appState.device, swapchainImage.renderSemaphore, null)
+            vkDestroyFence(appState.device, swapchainImage.renderFence, null)
+        }
     }
 }

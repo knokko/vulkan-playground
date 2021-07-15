@@ -56,6 +56,7 @@ class ApplicationState {
 
     var indirectDrawBuffer: Long? = null
     var indirectMemory: Long? = null
+    lateinit var indirectDrawData: ByteBuffer
     var indirectDrawOffset: Long? = null
     var indirectCountOffset: Long? = null
 
@@ -105,5 +106,13 @@ class ApplicationState {
                 vkQueueWaitIdle(graphicsQueue), "QueueWaitIdle", "destroy graphics"
             )
         }
+    }
+
+    fun hasIndirectDrawData(): Boolean {
+        return this::indirectDrawData.isInitialized
+    }
+
+    fun hasSwapchainImages(): Boolean {
+        return this::swapchainImages.isInitialized
     }
 }

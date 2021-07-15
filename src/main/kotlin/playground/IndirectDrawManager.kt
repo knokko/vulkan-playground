@@ -1,6 +1,7 @@
 package playground
 
 import org.lwjgl.system.MemoryStack.stackPush
+import org.lwjgl.system.MemoryUtil.memByteBuffer
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 
@@ -52,6 +53,14 @@ fun createIndirectDrawBuffer(appState: ApplicationState) {
             "BindBufferMemory", "indirect"
         )
 
+        val ppIndirectData = stack.callocPointer(1)
+        assertSuccess(
+            vkMapMemory(appState.device, appState.indirectMemory!!, 0, aiIndirectMemory.allocationSize(), 0, ppIndirectData),
+            "MapMemory", "indirect"
+        )
+
+        appState.indirectDrawData = memByteBuffer(ppIndirectData[0], ciIndirectBuffer.size().toInt())
+
         // I might make this more complicated in the future, but this should do for now
         appState.indirectCountOffset = 0
         appState.indirectDrawOffset = 4
@@ -61,6 +70,9 @@ fun createIndirectDrawBuffer(appState: ApplicationState) {
 fun destroyIndirectDrawBuffer(appState: ApplicationState) {
     if (appState.indirectDrawBuffer != null) {
         vkDestroyBuffer(appState.device, appState.indirectDrawBuffer!!, null)
+    }
+    if (appState.hasIndirectDrawData()) {
+        vkUnmapMemory(appState.device, appState.indirectMemory!!)
     }
     if (appState.indirectMemory != null) {
         vkFreeMemory(appState.device, appState.indirectMemory!!, null)

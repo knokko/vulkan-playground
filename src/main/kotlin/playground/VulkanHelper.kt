@@ -2,6 +2,7 @@ package playground
 
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.system.MemoryUtil.memAlloc
+import org.lwjgl.vulkan.VK10.VK_TIMEOUT
 import org.lwjgl.vulkan.VK10.vkGetPhysicalDeviceMemoryProperties
 import org.lwjgl.vulkan.VkMemoryRequirements
 import org.lwjgl.vulkan.VkPhysicalDevice
@@ -11,7 +12,8 @@ import java.nio.ByteBuffer
 import java.util.*
 
 fun assertSuccess(returnCode: Int, functionName: String, functionContext: String?) {
-    if (returnCode < 0) {
+    // For some reason, VK_TIMEOUT is not considered a failure
+    if (returnCode < 0 || returnCode == VK_TIMEOUT) {
         if (functionContext != null) {
             throw VulkanException("$functionName ($functionContext) returned $returnCode")
         } else {
