@@ -80,11 +80,15 @@ fun fillDrawingBuffers(appState: ApplicationState) {
         memAddress(appState.indirectDrawData) + appState.indirectDrawOffset!!,
         MAX_INDIRECT_DRAW_COUNT
     )
+
+    val terrain5 = appState.terrainModels.model5
+    //println("terrain5 is (${terrain5.vertexOffset}, ${terrain5.numVertices}, ${terrain5.indexOffset}, ${terrain5.numIndices}")
+
     val drawCommand1 = drawCommands[0]
-    drawCommand1.indexCount(6)
+    drawCommand1.indexCount(terrain5.numIndices)
     drawCommand1.instanceCount(1)
-    drawCommand1.firstIndex(0)
-    drawCommand1.vertexOffset(0)
+    drawCommand1.firstIndex(terrain5.indexOffset)
+    drawCommand1.vertexOffset(terrain5.vertexOffset)
     drawCommand1.firstInstance(0)
 
     val drawCommand2 = drawCommands[1]
@@ -101,13 +105,13 @@ fun fillDrawingBuffers(appState: ApplicationState) {
             0.01f, 1000f, true
         )
 
-        val viewMatrix = Matrix4f()
+        val viewMatrix = Matrix4f().rotateXYZ(toRadians(80f), 0f, 0f).translate(0f, -80f, 0f)
         projectionMatrix.mul(viewMatrix)
     }
 
     cameraMatrix.get(appState.uniformData)
 
-    val transformationMatrix1 = Matrix4f().translate(-0.2f, 0.2f, -8.5f)
+    val transformationMatrix1 = Matrix4f().scale(100f).translate(-0.5f, 0f, -0.5f)
     transformationMatrix1.get(appState.storageData)
 
     val transformationMatrix2 = Matrix4f().translate(10.2f, 0f, -60f)

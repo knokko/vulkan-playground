@@ -51,6 +51,8 @@ class ApplicationState {
     var indexBuffer: Long? = null
     var indexMemory: Long? = null
 
+    val terrainModels = TerrainModels()
+
     var bufferCopyCommandPool: Long? = null
     var staticDrawCommandPool: Long? = null
 

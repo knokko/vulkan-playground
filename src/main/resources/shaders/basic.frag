@@ -7,5 +7,5 @@ layout(location = 0) out vec4 outColor;
 
 void main() {
     // TODO Use a texture and lighting mathematics
-    outColor = vec4(abs(baseNormal), 1.0);
+    outColor = vec4(texCoordinates.xy, 0.0, 1.0);
 }

@@ -19,6 +19,6 @@ value class Vec2f(val address: Long) {
         const val SIZE = 8
 
         const val OFFSET_X = 0
-        const val OFFSET_Y = 0
+        const val OFFSET_Y = 4
     }
 }

@@ -4,12 +4,12 @@ import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.system.MemoryUtil.memByteBuffer
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import playground.ApplicationState
-import playground.assertSuccess
-import playground.chooseMemoryTypeIndex
+import playground.*
+import java.util.*
 
 fun createVertexBuffers(appState: ApplicationState) {
     stackPush().use { stack ->
+
         val ciBuffer = VkBufferCreateInfo.callocStack(stack)
         ciBuffer.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
         // Size will be filled in later
@@ -18,7 +18,7 @@ fun createVertexBuffers(appState: ApplicationState) {
 
         val pBuffer = stack.callocLong(1)
 
-        ciBuffer.size(TOTAL_NUM_VERTICES * BasicVertex.SIZE)
+        ciBuffer.size(TOTAL_VERTEX_SIZE.toLong())
         ciBuffer.usage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT or VK_BUFFER_USAGE_TRANSFER_DST_BIT)
         assertSuccess(
             vkCreateBuffer(appState.device, ciBuffer, null, pBuffer),
@@ -26,7 +26,7 @@ fun createVertexBuffers(appState: ApplicationState) {
         )
         appState.vertexBuffer = pBuffer[0]
 
-        ciBuffer.size(TOTAL_NUM_INDICES * INDEX_SIZE)
+        ciBuffer.size(TOTAL_INDEX_SIZE.toLong())
         ciBuffer.usage(VK_BUFFER_USAGE_INDEX_BUFFER_BIT or VK_BUFFER_USAGE_TRANSFER_DST_BIT)
         assertSuccess(
             vkCreateBuffer(appState.device, ciBuffer, null, pBuffer),
@@ -79,12 +79,9 @@ fun createVertexBuffers(appState: ApplicationState) {
 fun fillVertexBuffers(appState: ApplicationState) {
     stackPush().use { stack ->
 
-        val totalVertexSize = TOTAL_NUM_VERTICES * BasicVertex.SIZE
-        val totalIndexSize = TOTAL_NUM_INDICES * INDEX_SIZE
-
         val ciStagingBuffer = VkBufferCreateInfo.callocStack(stack)
         ciStagingBuffer.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
-        ciStagingBuffer.size(totalVertexSize + totalIndexSize)
+        ciStagingBuffer.size((TOTAL_VERTEX_SIZE + TOTAL_INDEX_SIZE).toLong())
         ciStagingBuffer.usage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
         ciStagingBuffer.sharingMode(VK_SHARING_MODE_EXCLUSIVE)
 
@@ -124,55 +121,28 @@ fun fillVertexBuffers(appState: ApplicationState) {
             "MapMemory", "staging"
         )
 
-        val stagingData = memByteBuffer(ppStagingData[0], (totalVertexSize + totalIndexSize).toInt())
-        val vertices = BasicVertex.createArray(stagingData, 0, TOTAL_NUM_VERTICES)
+        val stagingData = memByteBuffer(ppStagingData[0], TOTAL_VERTEX_SIZE + TOTAL_INDEX_SIZE)
 
-        stagingData.position(totalVertexSize.toInt())
-        val indices = stagingData.asIntBuffer()
-        stagingData.position(0)
+        // Fill the staging data...
+        var vertexOffset = 0
+        var indexOffset = 0
 
-        // This should become more complex when there are more models
-        vertices[0].position.x = -1f
-        vertices[0].position.y = -1f
-        vertices[0].position.z = 0.5f
-        // Normals will be set later
-        vertices[0].textureCoordinates.x = 0f
-        vertices[0].textureCoordinates.y = 0f
-        vertices[0].matrixIndex = 0
+        for (request in MODEL_REQUESTS) {
+            val requestVertices = BasicVertex.createArray(stagingData, vertexOffset.toLong(), request.numVertices.toLong())
+            vertexOffset += request.numVertices
 
-        vertices[1].position.x = 1f
-        vertices[1].position.y = -1f
-        vertices[1].position.z = 0.5f
-        vertices[1].textureCoordinates.x = 1f
-        vertices[1].textureCoordinates.y = 0f
-        vertices[1].matrixIndex = 0
+            stagingData.position(TOTAL_VERTEX_SIZE + indexOffset * INDEX_SIZE)
+            indexOffset += request.numIndices
+            stagingData.limit(TOTAL_VERTEX_SIZE + indexOffset * INDEX_SIZE)
 
-        vertices[2].position.x = 1f
-        vertices[2].position.y = 1f
-        vertices[2].position.z = 0.5f
-        vertices[2].textureCoordinates.x = 1f
-        vertices[2].textureCoordinates.y = 1f
-        vertices[2].matrixIndex = 0
+            val requestIndices = stagingData.asIntBuffer()
 
-        vertices[3].position.x = -1f
-        vertices[3].position.y = 1f
-        vertices[3].position.z = 0.5f
-        vertices[3].textureCoordinates.x = 0f
-        vertices[3].textureCoordinates.y = 1f
-        vertices[3].matrixIndex = 0
-
-        for (vertex in vertices) {
-            vertex.normal.x = 0f
-            vertex.normal.y = 0f
-            vertex.normal.z = -1f
+            request.fill(requestVertices, requestIndices)
         }
 
-        indices.put(0, 0)
-        indices.put(1, 1)
-        indices.put(2, 2)
-        indices.put(3, 2)
-        indices.put(4, 3)
-        indices.put(5, 0)
+        // Always reset this!
+        stagingData.position(0)
+        stagingData.limit(stagingData.capacity())
 
         val flushRange = VkMappedMemoryRange.callocStack(stack)
         flushRange.sType(VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE)
@@ -212,14 +182,14 @@ fun fillVertexBuffers(appState: ApplicationState) {
         val vertexCopyRegions = VkBufferCopy.callocStack(1, stack)
         vertexCopyRegions[0].srcOffset(0)
         vertexCopyRegions[0].dstOffset(0)
-        vertexCopyRegions[0].size(totalVertexSize)
+        vertexCopyRegions[0].size(TOTAL_VERTEX_SIZE.toLong())
 
         vkCmdCopyBuffer(copyCommand, stagingBuffer, appState.vertexBuffer!!, vertexCopyRegions)
 
         val indexCopyRegions = VkBufferCopy.callocStack(1, stack)
-        indexCopyRegions[0].srcOffset(totalVertexSize)
+        indexCopyRegions[0].srcOffset(TOTAL_VERTEX_SIZE.toLong())
         indexCopyRegions[0].dstOffset(0)
-        indexCopyRegions[0].size(totalIndexSize)
+        indexCopyRegions[0].size(TOTAL_INDEX_SIZE.toLong())
 
         vkCmdCopyBuffer(copyCommand, stagingBuffer, appState.indexBuffer!!, indexCopyRegions)
 
@@ -259,6 +229,23 @@ fun fillVertexBuffers(appState: ApplicationState) {
         vkDestroyFence(appState.device, copyFence, null)
         vkDestroyBuffer(appState.device, stagingBuffer, null)
         vkFreeMemory(appState.device, stagingMemory, null)
+
+        // And call the store methods of the model requests
+        vertexOffset = 0
+        indexOffset = 0
+        for (request in MODEL_REQUESTS) {
+            val resultModel = Model(
+                vertexOffset,
+                request.numVertices,
+                indexOffset,
+                request.numIndices,
+                request.numMatrices
+            )
+            request.store(appState, resultModel)
+
+            vertexOffset += request.numVertices
+            indexOffset += request.numIndices
+        }
     }
 }
 
@@ -277,12 +264,19 @@ fun destroyVertexBuffers(appState: ApplicationState) {
     }
 }
 
-val NUM_MODEL_VERTICES = arrayOf(4L)
-val TOTAL_NUM_VERTICES = NUM_MODEL_VERTICES.sum()
+val MODEL_REQUESTS = arrayOf(
+    requestTerrainModel(5) { appState, resultModel -> appState.terrainModels.model5 = resultModel },
+    //requestTerrainModel(15) { appState, resultModel -> appState.terrainModels.model15 = resultModel },
+    //requestTerrainModel(50) { appState, resultModel -> appState.terrainModels.model50 = resultModel }
+)
 
-val NUM_MODEL_INDICES = arrayOf(6L)
-val TOTAL_NUM_INDICES = NUM_MODEL_INDICES.sum()
+val TOTAL_NUM_VERTICES = MODEL_REQUESTS.sumOf { request -> request.numVertices }
+
+val TOTAL_NUM_INDICES = MODEL_REQUESTS.sumOf { request -> request.numIndices }
 
 // For now, I will only use 4-byte indices
 const val INDEX_SIZE = 4
 const val INDEX_TYPE = VK_INDEX_TYPE_UINT32
+
+val TOTAL_VERTEX_SIZE = TOTAL_NUM_VERTICES * BasicVertex.SIZE
+val TOTAL_INDEX_SIZE = TOTAL_NUM_INDICES * INDEX_SIZE
