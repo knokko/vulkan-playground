@@ -1,11 +1,10 @@
 package playground
 
 import org.lwjgl.system.MemoryStack.stackPush
+import org.lwjgl.system.MemoryUtil.memAddress
+import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRSwapchain.*
 import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.vulkan.VkFenceCreateInfo
-import org.lwjgl.vulkan.VkPresentInfoKHR
-import org.lwjgl.vulkan.VkSubmitInfo
 
 fun drawFrame(appState: ApplicationState) {
     stackPush().use { stack ->
@@ -73,5 +72,31 @@ fun drawFrame(appState: ApplicationState) {
 
 fun fillDrawingBuffers(appState: ApplicationState) {
     // TODO Well... fill the drawing buffers
-    appState.indirectDrawData.putInt(0, 0)
+    val numDrawCalls = 1
+    appState.indirectDrawData.putInt(appState.indirectCountOffset!!, numDrawCalls)
+
+    val drawCommands = VkDrawIndexedIndirectCommand.create(memAddress(appState.indirectDrawData) + appState.indirectDrawOffset!!, MAX_INDIRECT_DRAW_COUNT)
+    val drawCommand = drawCommands[0]
+    drawCommand.indexCount(6)
+    drawCommand.instanceCount(1)
+    drawCommand.firstIndex(0)
+    drawCommand.vertexOffset(0)
+    drawCommand.firstInstance(0)
+
+    // TODO Also flush storage and uniform buffer
+    stackPush().use { stack ->
+        val memoryRanges = VkMappedMemoryRange.callocStack(1, stack)
+
+        val drawMemoryRange = memoryRanges[0]
+        drawMemoryRange.sType(VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE)
+        drawMemoryRange.memory(appState.indirectMemory!!)
+        // This could be optimized by flushing only the parts that are used, but be careful with nonCoherentAtomSize
+        drawMemoryRange.offset(0)
+        drawMemoryRange.size(VK_WHOLE_SIZE)
+
+        assertSuccess(
+            vkFlushMappedMemoryRanges(appState.device, memoryRanges),
+            "FlushMappedMemoryRanges", "draw frame"
+        )
+    }
 }

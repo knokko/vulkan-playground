@@ -85,7 +85,7 @@ fun createStaticDrawCommandBuffers(appState: ApplicationState) {
                 appState.indirectDrawBuffer!!,
                 appState.indirectDrawOffset!!,
                 appState.indirectDrawBuffer!!,
-                appState.indirectCountOffset!!,
+                appState.indirectCountOffset!!.toLong(),
                 MAX_INDIRECT_DRAW_COUNT,
                 INDIRECT_DRAW_STRIDE
             )

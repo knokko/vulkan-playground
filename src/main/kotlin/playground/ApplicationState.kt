@@ -58,7 +58,7 @@ class ApplicationState {
     var indirectMemory: Long? = null
     lateinit var indirectDrawData: ByteBuffer
     var indirectDrawOffset: Long? = null
-    var indirectCountOffset: Long? = null
+    var indirectCountOffset: Int? = null
 
     fun destroyInstance() {
         if (this::instance.isInitialized) {
