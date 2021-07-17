@@ -81,7 +81,7 @@ fun fillDrawingBuffers(appState: ApplicationState) {
         MAX_INDIRECT_DRAW_COUNT
     )
 
-    val terrain5 = appState.terrainModels.model5
+    val terrain5 = appState.terrainModels.model50
     //println("terrain5 is (${terrain5.vertexOffset}, ${terrain5.numVertices}, ${terrain5.indexOffset}, ${terrain5.numIndices}")
 
     val drawCommand1 = drawCommands[0]

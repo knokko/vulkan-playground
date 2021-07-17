@@ -128,7 +128,7 @@ fun fillVertexBuffers(appState: ApplicationState) {
         var indexOffset = 0
 
         for (request in MODEL_REQUESTS) {
-            val requestVertices = BasicVertex.createArray(stagingData, vertexOffset.toLong(), request.numVertices.toLong())
+            val requestVertices = BasicVertex.createArray(stagingData, vertexOffset * BasicVertex.SIZE, request.numVertices.toLong())
             vertexOffset += request.numVertices
 
             stagingData.position(TOTAL_VERTEX_SIZE + indexOffset * INDEX_SIZE)
@@ -266,8 +266,8 @@ fun destroyVertexBuffers(appState: ApplicationState) {
 
 val MODEL_REQUESTS = arrayOf(
     requestTerrainModel(5) { appState, resultModel -> appState.terrainModels.model5 = resultModel },
-    //requestTerrainModel(15) { appState, resultModel -> appState.terrainModels.model15 = resultModel },
-    //requestTerrainModel(50) { appState, resultModel -> appState.terrainModels.model50 = resultModel }
+    requestTerrainModel(15) { appState, resultModel -> appState.terrainModels.model15 = resultModel },
+    requestTerrainModel(50) { appState, resultModel -> appState.terrainModels.model50 = resultModel }
 )
 
 val TOTAL_NUM_VERTICES = MODEL_REQUESTS.sumOf { request -> request.numVertices }

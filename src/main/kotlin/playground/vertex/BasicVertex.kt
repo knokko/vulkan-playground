@@ -28,14 +28,14 @@ value class BasicVertex(val address: Long) {
 
         const val SIZE = OFFSET_MATRIX_INDEX + Int.SIZE_BYTES
 
-        fun createArray(buffer: ByteBuffer, position: Long, length: Long): Array<BasicVertex> {
+        fun createArray(buffer: ByteBuffer, position: Int, length: Long): Array<BasicVertex> {
             if (position < 0) throw IllegalArgumentException("position ($position) < 0")
             val endIndex = position + length * SIZE
             if (length > 0 && endIndex >= buffer.capacity())
                 throw IllegalArgumentException("Creating this array would allow buffer overflow")
             if (endIndex < position) throw IllegalArgumentException("Size computation caused integer overflow")
 
-            val startAddress = memAddress(buffer) + position
+            val startAddress = memAddress(buffer, position)
             return Array(length.toInt()) { index -> BasicVertex(startAddress + index * SIZE) }
         }
     }
