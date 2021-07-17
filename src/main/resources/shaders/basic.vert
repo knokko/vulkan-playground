@@ -17,7 +17,8 @@ layout(set = 0, binding = 1) readonly buffer Objects {
 
 void main() {
     mat4 transformationMatrix = objects.transformationMatrices[inMatrixIndex + gl_BaseInstance];
-    gl_Position = camera.matrix * transformationMatrix * vec4(inBasePosition, 1.0);
+    float extraHeight = cos(inBasePosition.x * 20) + sin(inBasePosition.z * 20);
+    gl_Position = camera.matrix * transformationMatrix * vec4(inBasePosition + vec3(0.0, 0.1, 0.0) * extraHeight, 1.0);
 
     passBaseNormal = (transformationMatrix * vec4(inBaseNormal, 0.0)).xyz;
     passTexCoordinates = inTexCoordinates;

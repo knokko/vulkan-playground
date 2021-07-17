@@ -73,7 +73,7 @@ fun drawFrame(appState: ApplicationState) {
 }
 
 fun fillDrawingBuffers(appState: ApplicationState) {
-    val numDrawCalls = 2
+    val numDrawCalls = 3
     appState.indirectDrawData.putInt(appState.indirectCountOffset!!, numDrawCalls)
 
     val drawCommands = VkDrawIndexedIndirectCommand.create(
@@ -81,8 +81,9 @@ fun fillDrawingBuffers(appState: ApplicationState) {
         MAX_INDIRECT_DRAW_COUNT
     )
 
-    val terrain5 = appState.terrainModels.model50
-    //println("terrain5 is (${terrain5.vertexOffset}, ${terrain5.numVertices}, ${terrain5.indexOffset}, ${terrain5.numIndices}")
+    val terrain5 = appState.terrainModels.model5
+    val terrain15 = appState.terrainModels.model15
+    val terrain50 = appState.terrainModels.model50
 
     val drawCommand1 = drawCommands[0]
     drawCommand1.indexCount(terrain5.numIndices)
@@ -92,11 +93,18 @@ fun fillDrawingBuffers(appState: ApplicationState) {
     drawCommand1.firstInstance(0)
 
     val drawCommand2 = drawCommands[1]
-    drawCommand2.indexCount(6)
+    drawCommand2.indexCount(terrain15.numIndices)
     drawCommand2.instanceCount(1)
-    drawCommand2.firstIndex(0)
-    drawCommand2.vertexOffset(0)
+    drawCommand2.firstIndex(terrain15.indexOffset)
+    drawCommand2.vertexOffset(terrain15.vertexOffset)
     drawCommand2.firstInstance(1)
+
+    val drawCommand3 = drawCommands[2]
+    drawCommand3.indexCount(terrain50.numIndices)
+    drawCommand3.instanceCount(1)
+    drawCommand3.firstIndex(terrain50.indexOffset)
+    drawCommand3.vertexOffset(terrain50.vertexOffset)
+    drawCommand3.firstInstance(2)
 
     val cameraMatrix = run {
         val projectionMatrix = Matrix4f().setPerspective(
@@ -105,17 +113,20 @@ fun fillDrawingBuffers(appState: ApplicationState) {
             0.01f, 1000f, true
         )
 
-        val viewMatrix = Matrix4f().rotateXYZ(toRadians(80f), 0f, 0f).translate(0f, -80f, 0f)
+        val viewMatrix = Matrix4f().rotateXYZ(toRadians(80f), 0f, 0f).translate(0f, -190f, 0f)
         projectionMatrix.mul(viewMatrix)
     }
 
     cameraMatrix.get(appState.uniformData)
 
-    val transformationMatrix1 = Matrix4f().scale(100f).translate(-0.5f, 0f, -0.5f)
+    val transformationMatrix1 = Matrix4f().scale(100f).translate(-1.6f, 0f, -0.5f)
     transformationMatrix1.get(appState.storageData)
 
-    val transformationMatrix2 = Matrix4f().translate(10.2f, 0f, -60f)
+    val transformationMatrix2 = Matrix4f().scale(100f).translate(-0.5f, 0f, -0.5f)
     transformationMatrix2.get(64, appState.storageData)
+
+    val transformationMatrix3 = Matrix4f().scale(100f).translate(0.6f, 0f, -0.5f)
+    transformationMatrix3.get(128, appState.storageData)
 
     stackPush().use { stack ->
         val memoryRanges = VkMappedMemoryRange.callocStack(3, stack)
