@@ -25,8 +25,7 @@ fun createBasicRasterizationState(stack: MemoryStack): VkPipelineRasterizationSt
     ciRasterization.depthClampEnable(false)
     ciRasterization.rasterizerDiscardEnable(false)
     ciRasterization.polygonMode(VK_POLYGON_MODE_FILL)
-    // TODO Cull back after initial testing
-    ciRasterization.cullMode(VK_CULL_MODE_NONE)
+    ciRasterization.cullMode(VK_CULL_MODE_BACK_BIT)
     ciRasterization.frontFace(VK_FRONT_FACE_COUNTER_CLOCKWISE)
     ciRasterization.depthBiasEnable(false)
     ciRasterization.lineWidth(1f)

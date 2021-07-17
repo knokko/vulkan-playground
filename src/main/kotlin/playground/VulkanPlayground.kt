@@ -8,7 +8,6 @@ import playground.vertex.createVertexBuffers
 import playground.vertex.destroyVertexBuffers
 import playground.vertex.fillVertexBuffers
 import java.lang.Exception
-import java.lang.Thread.sleep
 
 const val TRY_DEBUG = true
 
@@ -20,6 +19,7 @@ fun main() {
         initWindowSurface(appState)
         choosePhysicalDevice(appState)
         initLogicalDevice(appState)
+        determineSampleCount(appState)
         createSwapchain(appState)
         createResolutionDependantImageResources(appState)
         createRenderPasses(appState)

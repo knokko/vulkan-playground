@@ -12,8 +12,6 @@ val INDIRECT_DRAW_STRIDE = VkDrawIndexedIndirectCommand.SIZEOF
 
 const val MAX_NUM_TRANSFORMATION_MATRICES = 200
 
-// TODO Enable and check drawIndirectFirstInstance
-
 fun createIndirectDrawBuffer(appState: ApplicationState) {
     stackPush().use { stack ->
 
