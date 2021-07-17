@@ -1,5 +1,7 @@
 package playground
 
+import org.joml.Math.toRadians
+import org.joml.Matrix4f
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.system.MemoryUtil.memAddress
 import org.lwjgl.vulkan.*
@@ -71,21 +73,48 @@ fun drawFrame(appState: ApplicationState) {
 }
 
 fun fillDrawingBuffers(appState: ApplicationState) {
-    // TODO Well... fill the drawing buffers
-    val numDrawCalls = 1
+    val numDrawCalls = 2
     appState.indirectDrawData.putInt(appState.indirectCountOffset!!, numDrawCalls)
 
-    val drawCommands = VkDrawIndexedIndirectCommand.create(memAddress(appState.indirectDrawData) + appState.indirectDrawOffset!!, MAX_INDIRECT_DRAW_COUNT)
-    val drawCommand = drawCommands[0]
-    drawCommand.indexCount(6)
-    drawCommand.instanceCount(1)
-    drawCommand.firstIndex(0)
-    drawCommand.vertexOffset(0)
-    drawCommand.firstInstance(0)
+    val drawCommands = VkDrawIndexedIndirectCommand.create(
+        memAddress(appState.indirectDrawData) + appState.indirectDrawOffset!!,
+        MAX_INDIRECT_DRAW_COUNT
+    )
+    val drawCommand1 = drawCommands[0]
+    drawCommand1.indexCount(6)
+    drawCommand1.instanceCount(1)
+    drawCommand1.firstIndex(0)
+    drawCommand1.vertexOffset(0)
+    drawCommand1.firstInstance(0)
 
-    // TODO Also flush storage and uniform buffer
+    val drawCommand2 = drawCommands[1]
+    drawCommand2.indexCount(6)
+    drawCommand2.instanceCount(1)
+    drawCommand2.firstIndex(0)
+    drawCommand2.vertexOffset(0)
+    drawCommand2.firstInstance(1)
+
+    val cameraMatrix = run {
+        val projectionMatrix = Matrix4f().setPerspective(
+            toRadians(70f),
+            appState.swapchainWidth!!.toFloat() / appState.swapchainHeight!!.toFloat(),
+            0.01f, 1000f, true
+        )
+
+        val viewMatrix = Matrix4f()
+        projectionMatrix.mul(viewMatrix)
+    }
+
+    cameraMatrix.get(appState.uniformData)
+
+    val transformationMatrix1 = Matrix4f().translate(-0.2f, 0.2f, -8.5f)
+    transformationMatrix1.get(appState.storageData)
+
+    val transformationMatrix2 = Matrix4f().translate(10.2f, 0f, -60f)
+    transformationMatrix2.get(64, appState.storageData)
+
     stackPush().use { stack ->
-        val memoryRanges = VkMappedMemoryRange.callocStack(1, stack)
+        val memoryRanges = VkMappedMemoryRange.callocStack(3, stack)
 
         val drawMemoryRange = memoryRanges[0]
         drawMemoryRange.sType(VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE)
@@ -93,6 +122,20 @@ fun fillDrawingBuffers(appState: ApplicationState) {
         // This could be optimized by flushing only the parts that are used, but be careful with nonCoherentAtomSize
         drawMemoryRange.offset(0)
         drawMemoryRange.size(VK_WHOLE_SIZE)
+
+        val uniformMemoryRange = memoryRanges[1]
+        uniformMemoryRange.sType(VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE)
+        uniformMemoryRange.memory(appState.uniformMemory!!)
+        uniformMemoryRange.offset(0)
+        // Currently, the entire uniform memory must be written in each frame
+        uniformMemoryRange.size(VK_WHOLE_SIZE)
+
+        val storageMemoryRange = memoryRanges[2]
+        storageMemoryRange.sType(VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE)
+        storageMemoryRange.memory(appState.storageMemory!!)
+        storageMemoryRange.offset(0)
+        // This could be optimized by flushing only the parts that are used, but be careful with nonCoherentAtomSize
+        storageMemoryRange.size(VK_WHOLE_SIZE)
 
         assertSuccess(
             vkFlushMappedMemoryRanges(appState.device, memoryRanges),

@@ -1,4 +1,4 @@
-#version 450
+#version 460
 
 layout(location = 0) in vec3 inBasePosition;
 layout(location = 1) in vec3 inBaseNormal;
@@ -10,15 +10,15 @@ layout(location = 1) out vec2 passTexCoordinates;
 
 layout(set = 0, binding = 0) uniform Camera {
     mat4 matrix;
-};
+} camera;
 layout(set = 0, binding = 1) readonly buffer Objects {
     mat4 transformationMatrices[];
-};
+} objects;
 
 void main() {
-    // TODO Use projection mathematics and height map after initial testing
-    gl_Position = vec4(inBasePosition, 1.0);
+    mat4 transformationMatrix = objects.transformationMatrices[inMatrixIndex + gl_BaseInstance];
+    gl_Position = camera.matrix * transformationMatrix * vec4(inBasePosition, 1.0);
 
-    passBaseNormal = inBaseNormal;
+    passBaseNormal = (transformationMatrix * vec4(inBaseNormal, 0.0)).xyz;
     passTexCoordinates = inTexCoordinates;
 }

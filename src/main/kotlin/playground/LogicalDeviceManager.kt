@@ -1,11 +1,8 @@
 package playground
 
 import org.lwjgl.system.MemoryStack.stackPush
+import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.vulkan.VkDevice
-import org.lwjgl.vulkan.VkDeviceCreateInfo
-import org.lwjgl.vulkan.VkDeviceQueueCreateInfo
-import org.lwjgl.vulkan.VkQueueFamilyProperties
 
 fun initLogicalDevice(appState: ApplicationState) {
     stackPush().use { stack ->
@@ -48,11 +45,14 @@ fun initLogicalDevice(appState: ApplicationState) {
         }
         println()
 
+        val deviceFeatures = VkPhysicalDeviceFeatures.callocStack(stack)
+        deviceFeatures.drawIndirectFirstInstance(true)
+
         val ciDevice = VkDeviceCreateInfo.callocStack(stack)
         ciDevice.sType(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO)
         ciDevice.pQueueCreateInfos(pCiQueues)
         ciDevice.ppEnabledExtensionNames(pExtensions)
-        // TODO I'm not sure whether I need to enable the draw indirect count feature, so I will find out soon
+        ciDevice.pEnabledFeatures(deviceFeatures)
 
         val pDevice = stack.callocPointer(1)
         assertSuccess(vkCreateDevice(appState.physicalDevice, ciDevice, null, pDevice), "CreateDevice")
