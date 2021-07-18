@@ -36,6 +36,7 @@ fun main() {
 
         openWindow(appState)
         while (!shouldCloseWindow(appState)) {
+            updateCamera(appState)
             drawFrame(appState)
         }
         closeWindow(appState)

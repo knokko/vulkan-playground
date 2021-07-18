@@ -63,6 +63,8 @@ class ApplicationState {
     var indirectDrawOffset: Long? = null
     var indirectCountOffset: Int? = null
 
+    val camera = Camera()
+
     fun destroyInstance() {
         if (this::instance.isInitialized) {
             vkDestroyInstance(instance, null)

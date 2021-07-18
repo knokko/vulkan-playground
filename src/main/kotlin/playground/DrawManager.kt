@@ -113,7 +113,9 @@ fun fillDrawingBuffers(appState: ApplicationState) {
             0.01f, 1000f, true
         )
 
-        val viewMatrix = Matrix4f().rotateXYZ(toRadians(80f), 0f, 0f).translate(0f, -190f, 0f)
+        val viewMatrix = Matrix4f()
+            .rotateXYZ(toRadians(-appState.camera.pitch), toRadians(-appState.camera.yaw), 0f)
+            .translate(-appState.camera.posX, -appState.camera.posY, -appState.camera.posZ)
         projectionMatrix.mul(viewMatrix)
     }
 
