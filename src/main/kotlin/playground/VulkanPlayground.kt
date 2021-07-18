@@ -32,6 +32,7 @@ fun main() {
         createStaticDrawingCommandPool(appState)
         createStaticDrawCommandBuffers(appState)
         getQueues(appState)
+        createTextureImageResources(appState)
         fillVertexBuffers(appState)
 
         openWindow(appState)
@@ -56,6 +57,7 @@ fun main() {
     destroyFramebuffers(appState)
     destroyRenderPasses(appState)
     destroySwapchain(appState)
+    destroyTextureImageResources(appState)
     destroyLogicalDevice(appState)
     destroyWindowSurface(appState)
     destroyInstance(appState)

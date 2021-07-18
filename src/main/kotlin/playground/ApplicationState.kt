@@ -21,6 +21,10 @@ class ApplicationState {
     var depthFormat: Int? = null
     var resolutionDependantMemory: Long? = null
 
+    var textureImageMemory: Long? = null
+    var textureColorImage: Long? = null
+    var textureColorImageView: Long? = null
+
     lateinit var instance: VkInstance
     var debugCallback: Long? = null
 
