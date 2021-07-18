@@ -14,23 +14,31 @@ fun createRenderPasses(appState: ApplicationState) {
 
 fun createBasicRenderPass(appState: ApplicationState) {
     stackPush().use {stack ->
-        val attachments = VkAttachmentDescription.callocStack(2, stack)
+        val attachments = VkAttachmentDescription.callocStack(3, stack)
 
         val colorAttachment = attachments[0]
         colorAttachment.format(appState.swapchainColorFormat!!)
-        colorAttachment.samples(appState.sampleCount)
+        colorAttachment.samples(appState.sampleCount!!)
         colorAttachment.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
         colorAttachment.storeOp(VK_ATTACHMENT_STORE_OP_STORE)
         colorAttachment.initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
-        colorAttachment.finalLayout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+        colorAttachment.finalLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
 
         val depthAttachment = attachments[1]
         depthAttachment.format(appState.depthFormat!!)
-        depthAttachment.samples(appState.sampleCount)
+        depthAttachment.samples(appState.sampleCount!!)
         depthAttachment.loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
         depthAttachment.storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)
         depthAttachment.initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
         depthAttachment.finalLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+
+        val resolveAttachment = attachments[2]
+        resolveAttachment.format(appState.swapchainColorFormat!!)
+        resolveAttachment.samples(VK_SAMPLE_COUNT_1_BIT)
+        resolveAttachment.loadOp(VK_ATTACHMENT_LOAD_OP_DONT_CARE)
+        resolveAttachment.storeOp(VK_ATTACHMENT_STORE_OP_STORE)
+        resolveAttachment.initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
+        resolveAttachment.finalLayout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
 
         val refColorAttachments = VkAttachmentReference.callocStack(1, stack)
         val refColorAttachment = refColorAttachments[0]
@@ -41,6 +49,11 @@ fun createBasicRenderPass(appState: ApplicationState) {
         refDepthAttachment.attachment(1)
         refDepthAttachment.layout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
 
+        val refResolveAttachments = VkAttachmentReference.callocStack(1, stack)
+        val refResolveAttachment = refResolveAttachments[0]
+        refResolveAttachment.attachment(2)
+        refResolveAttachment.layout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+
         val subpasses = VkSubpassDescription.callocStack(1, stack)
         // Just 1 subpass
         val subpass = subpasses[0]
@@ -48,6 +61,7 @@ fun createBasicRenderPass(appState: ApplicationState) {
         subpass.colorAttachmentCount(1)
         subpass.pColorAttachments(refColorAttachments)
         subpass.pDepthStencilAttachment(refDepthAttachment)
+        subpass.pResolveAttachments(refResolveAttachments)
         // TODO Add input attachments for texture and height map
         // No resolve and preserve attachments
 

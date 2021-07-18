@@ -26,53 +26,19 @@ fun createDepthImage(appState: ApplicationState) {
         }
         println("Chose depth format ${appState.depthFormat}")
 
-        val ciImage = VkImageCreateInfo.callocStack(stack)
-        ciImage.sType(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO)
-        ciImage.imageType(VK_IMAGE_TYPE_2D)
-        ciImage.format(appState.depthFormat!!)
-        ciImage.extent().width(appState.swapchainWidth!!)
-        ciImage.extent().height(appState.swapchainHeight!!)
-        ciImage.extent().depth(1)
-        ciImage.mipLevels(1)
-        ciImage.arrayLayers(1)
-        ciImage.samples(appState.sampleCount)
-        ciImage.tiling(VK_IMAGE_TILING_OPTIMAL)
-        ciImage.usage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-        ciImage.sharingMode(VK_SHARING_MODE_EXCLUSIVE)
-        ciImage.initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
-
-        val pImage = stack.callocLong(1)
-        assertSuccess(
-            vkCreateImage(appState.device, ciImage, null, pImage),
-            "CreateImage", "depth"
+        appState.depthImage = createImage(
+            appState.swapchainWidth!!, appState.swapchainHeight!!,
+            appState.depthFormat!!, appState.sampleCount!!, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+            "depth", appState.device, stack
         )
-        appState.depthImage = pImage[0]
     }
 }
 
 fun createDepthImageView(appState: ApplicationState) {
     stackPush().use { stack ->
-        val ciImageView = VkImageViewCreateInfo.callocStack(stack)
-        ciImageView.sType(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO)
-        ciImageView.image(appState.depthImage!!)
-        ciImageView.viewType(VK_IMAGE_VIEW_TYPE_2D)
-        ciImageView.format(appState.depthFormat!!)
-        ciImageView.components().set(
-            VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY,
-            VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY
+        appState.depthImageView = createImageView(
+            appState.depthImage!!, appState.depthFormat!!, VK_IMAGE_ASPECT_DEPTH_BIT, "depth", appState.device, stack
         )
-        ciImageView.subresourceRange().aspectMask(VK_IMAGE_ASPECT_DEPTH_BIT)
-        ciImageView.subresourceRange().baseMipLevel(0)
-        ciImageView.subresourceRange().levelCount(1)
-        ciImageView.subresourceRange().baseArrayLayer(0)
-        ciImageView.subresourceRange().layerCount(1)
-
-        val pImageView = stack.callocLong(1)
-        assertSuccess(
-            vkCreateImageView(appState.device, ciImageView, null, pImageView),
-            "CreateImageView", "depth"
-        )
-        appState.depthImageView = pImageView[0]
     }
 }
 

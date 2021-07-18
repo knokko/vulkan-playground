@@ -5,7 +5,6 @@ import org.lwjgl.system.MemoryUtil.memByteBuffer
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 import playground.*
-import java.util.*
 
 fun createVertexBuffers(appState: ApplicationState) {
     stackPush().use { stack ->
@@ -37,11 +36,19 @@ fun createVertexBuffers(appState: ApplicationState) {
         val memRequirements = VkMemoryRequirements.callocStack(stack)
 
         vkGetBufferMemoryRequirements(appState.device, appState.vertexBuffer!!, memRequirements)
-        val vertexMemoryTypeIndex = chooseMemoryTypeIndex(appState.physicalDevice, memRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)!!
+        val vertexMemoryTypeIndex = chooseMemoryTypeIndex(
+            appState.physicalDevice,
+            memRequirements.memoryTypeBits(),
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+        )!!
         val vertexAllocationSize = memRequirements.size()
 
         vkGetBufferMemoryRequirements(appState.device, appState.indexBuffer!!, memRequirements)
-        val indexMemoryTypeIndex = chooseMemoryTypeIndex(appState.physicalDevice, memRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)!!
+        val indexMemoryTypeIndex = chooseMemoryTypeIndex(
+            appState.physicalDevice,
+            memRequirements.memoryTypeBits(),
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+        )!!
         val indexAllocationSize = memRequirements.size()
 
         val aiMemory = VkMemoryAllocateInfo.callocStack(stack)
@@ -96,7 +103,11 @@ fun fillVertexBuffers(appState: ApplicationState) {
         vkGetBufferMemoryRequirements(appState.device, stagingBuffer, memRequirements)
 
         val stagingMemorySize = memRequirements.size()
-        val memTypeIndex = chooseMemoryTypeIndex(appState.physicalDevice, memRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)!!
+        val memTypeIndex = chooseMemoryTypeIndex(
+            appState.physicalDevice,
+            memRequirements.memoryTypeBits(),
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+        )!!
 
         val aiStagingMemory = VkMemoryAllocateInfo.callocStack(stack)
         aiStagingMemory.sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)

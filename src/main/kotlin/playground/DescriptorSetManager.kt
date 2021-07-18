@@ -33,7 +33,11 @@ fun createUniformBuffer(appState: ApplicationState) {
         val requirements = VkMemoryRequirements.callocStack(stack)
         vkGetBufferMemoryRequirements(appState.device, appState.uniformBuffer!!, requirements)
 
-        val memoryTypeIndex = chooseMemoryTypeIndex(appState.physicalDevice, requirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)!!
+        val memoryTypeIndex = chooseMemoryTypeIndex(
+            appState.physicalDevice,
+            requirements.memoryTypeBits(),
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+        )!!
 
         val aiMemory = VkMemoryAllocateInfo.callocStack(stack)
         aiMemory.sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
@@ -84,7 +88,11 @@ fun createStorageBuffer(appState: ApplicationState) {
         val requirements = VkMemoryRequirements.callocStack(stack)
         vkGetBufferMemoryRequirements(appState.device, appState.storageBuffer!!, requirements)
 
-        val memoryTypeIndex = chooseMemoryTypeIndex(appState.physicalDevice, requirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)!!
+        val memoryTypeIndex = chooseMemoryTypeIndex(
+            appState.physicalDevice,
+            requirements.memoryTypeBits(),
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+        )!!
 
         val aiMemory = VkMemoryAllocateInfo.callocStack(stack)
         aiMemory.sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)

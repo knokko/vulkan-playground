@@ -19,7 +19,7 @@ fun createFramebuffers(appState: ApplicationState) {
 
         for (swapchainImage in appState.swapchainImages) {
             // We always use the same depth image because we do at most 1 rendering operation at a time
-            ciFramebuffer.pAttachments(stack.longs(swapchainImage.view!!, appState.depthImageView!!))
+            ciFramebuffer.pAttachments(stack.longs(appState.colorImageView!!, appState.depthImageView!!, swapchainImage.view!!))
 
             val pFramebuffer = stack.callocLong(1)
             assertSuccess(

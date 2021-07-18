@@ -36,7 +36,8 @@ fun createBasicRasterizationState(stack: MemoryStack): VkPipelineRasterizationSt
 fun createBasicMultisampleState(appState: ApplicationState, stack: MemoryStack): VkPipelineMultisampleStateCreateInfo {
     val ciMultisample = VkPipelineMultisampleStateCreateInfo.callocStack(stack)
     ciMultisample.sType(VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO)
-    ciMultisample.rasterizationSamples(appState.sampleCount)
+    ciMultisample.rasterizationSamples(appState.sampleCount!!)
+    // TODO Checkout sample shading
     ciMultisample.sampleShadingEnable(false)
     ciMultisample.pSampleMask(null)
     ciMultisample.alphaToCoverageEnable(false)

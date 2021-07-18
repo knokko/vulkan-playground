@@ -14,6 +14,8 @@ class ApplicationState {
     var swapchainWidth: Int? = null
     var swapchainHeight: Int? = null
 
+    var colorImage: Long? = null
+    var colorImageView: Long? = null
     var depthImage: Long? = null
     var depthImageView: Long? = null
     var depthFormat: Int? = null
@@ -28,8 +30,7 @@ class ApplicationState {
     var queueFamilyIndex: Int? = null
     lateinit var graphicsQueue: VkQueue
 
-    // TODO Experiment with this later (and check physical device limits)
-    val sampleCount = VK_SAMPLE_COUNT_1_BIT
+    var sampleCount: Int? = null
 
     var basicRenderPass: Long? = null
     var basicPipeline: Long? = null

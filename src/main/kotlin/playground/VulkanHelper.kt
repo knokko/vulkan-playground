@@ -42,13 +42,13 @@ fun mallocBundledResource(path: String): ByteBuffer {
     return buffer
 }
 
-fun chooseMemoryTypeIndex(device: VkPhysicalDevice, requirements: VkMemoryRequirements, requiredPropertyFlags: Int): Int? {
+fun chooseMemoryTypeIndex(device: VkPhysicalDevice, memoryTypeBits: Int, requiredPropertyFlags: Int): Int? {
     stackPush().use { stack ->
         val memoryProps = VkPhysicalDeviceMemoryProperties.callocStack(stack)
         vkGetPhysicalDeviceMemoryProperties(device, memoryProps)
 
         for (memTypeIndex in 0 until memoryProps.memoryTypeCount()) {
-            if (((1 shl memTypeIndex) and requirements.memoryTypeBits()) != 0) {
+            if (((1 shl memTypeIndex) and memoryTypeBits) != 0) {
                 val availablePropertyFlags = memoryProps.memoryTypes(memTypeIndex).propertyFlags() and requiredPropertyFlags
                 if (availablePropertyFlags == requiredPropertyFlags) {
                     return memTypeIndex

@@ -32,7 +32,11 @@ fun createIndirectDrawBuffer(appState: ApplicationState) {
         val memRequirements = VkMemoryRequirements.callocStack(stack)
         vkGetBufferMemoryRequirements(appState.device, appState.indirectDrawBuffer!!, memRequirements)
 
-        val memoryTypeIndex = chooseMemoryTypeIndex(appState.physicalDevice, memRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)!!
+        val memoryTypeIndex = chooseMemoryTypeIndex(
+            appState.physicalDevice,
+            memRequirements.memoryTypeBits(),
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+        )!!
 
         val aiIndirectMemory = VkMemoryAllocateInfo.callocStack(stack)
         aiIndirectMemory.sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
