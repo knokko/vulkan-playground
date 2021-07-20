@@ -24,6 +24,8 @@ class ApplicationState {
     var textureImageMemory: Long? = null
     var textureColorImage: Long? = null
     var textureColorImageView: Long? = null
+    var textureHeightImage: Long? = null
+    var textureHeightImageView: Long? = null
 
     var basicImageSampler: Long? = null
 

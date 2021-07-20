@@ -22,18 +22,47 @@ fun createTextureImageResources(appState: ApplicationState) {
             "texture color image", appState.device, stack
         )
 
+        // For testing purposes, I will load the height values from an actual PNG image, but I won't do this forever
+        val terrainHeightColorImage = ImageIO.read(ApplicationState::class.java.classLoader.getResource("testTerrainHeight.png"))
+        val terrainHeightImage = HeightImage(terrainHeightColorImage.width, terrainHeightColorImage.height)
+        for (x in 0 until terrainHeightImage.width) {
+            for (y in 0 until terrainHeightImage.height) {
+                val color = Color(terrainHeightColorImage.getRGB(x, y))
+                val value = 0.1f * (color.red - 127)
+                terrainHeightImage.setValueAt(x, y, value)
+            }
+        }
+
+        // For now, the terrain height image is the only height image
+        val totalHeightImage = terrainHeightImage
+        appState.textureHeightImage = createImage(
+            totalHeightImage.width, totalHeightImage.height, VK_FORMAT_R32_SFLOAT, VK_SAMPLE_COUNT_1_BIT,
+            VK_IMAGE_USAGE_TRANSFER_DST_BIT or VK_IMAGE_USAGE_SAMPLED_BIT,
+            "texture height image", appState.device, stack
+        )
+
         val colorRequirements = VkMemoryRequirements.callocStack(stack)
         vkGetImageMemoryRequirements(appState.device, appState.textureColorImage!!, colorRequirements)
 
+        val heightRequirements = VkMemoryRequirements.callocStack(stack)
+        vkGetImageMemoryRequirements(appState.device, appState.textureHeightImage!!, heightRequirements)
+
         val memoryTypeIndex = chooseMemoryTypeIndex(
             appState.physicalDevice,
-            // TODO Also check requirements for the height image
-            colorRequirements.memoryTypeBits(),
+            colorRequirements.memoryTypeBits() and heightRequirements.memoryTypeBits(),
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
         )!!
 
-        // TODO This needs to be improved after adding height textures
-        val totalMemorySize = colorRequirements.size()
+        val heightImageOffset: Long
+        if (colorRequirements.size() % heightRequirements.alignment() == 0L) {
+            println("color texture image and height texture image can be packed tightly")
+            heightImageOffset = colorRequirements.size()
+        } else {
+            heightImageOffset = (1 + colorRequirements.size() / heightRequirements.alignment()) * heightRequirements.alignment()
+            println("there is a gap of ${heightImageOffset - colorRequirements.size()} bytes between color texture image and height texture image")
+        }
+
+        val totalMemorySize = heightImageOffset + heightRequirements.size()
 
         val aiImageMemory = VkMemoryAllocateInfo.callocStack(stack)
         aiImageMemory.sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
@@ -51,14 +80,23 @@ fun createTextureImageResources(appState: ApplicationState) {
             vkBindImageMemory(appState.device, appState.textureColorImage!!, appState.textureImageMemory!!, 0),
             "BindImageMemory", "texture color image"
         )
+        assertSuccess(
+            vkBindImageMemory(appState.device, appState.textureHeightImage!!, appState.textureImageMemory!!, heightImageOffset),
+            "BindImageMemory", "texture height image"
+        )
 
         appState.textureColorImageView = createImageView(
             appState.textureColorImage!!, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT,
             "texture color image", appState.device, stack
         )
+        appState.textureHeightImageView = createImageView(
+            appState.textureHeightImage!!, VK_FORMAT_R32_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT,
+            "texture height image", appState.device, stack
+        )
 
-        // TODO Increase this after adding height texture
-        val stagingBufferSize = 4 * totalColorImage.width * totalColorImage.height
+        val stagingColorSize = 4 * totalColorImage.width * totalColorImage.height
+        val stagingHeightSize = 4 * totalHeightImage.width * totalHeightImage.height
+        val stagingBufferSize = stagingColorSize + stagingHeightSize
         val ciStagingBuffer = VkBufferCreateInfo.callocStack(stack)
         ciStagingBuffer.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
         ciStagingBuffer.size(stagingBufferSize.toLong())
@@ -113,7 +151,12 @@ fun createTextureImageResources(appState: ApplicationState) {
                 stagingData.put(index + 3, color.alpha.toByte())
             }
         }
-        // TODO Also store the height texture
+        for (x in 0 until totalHeightImage.width) {
+            for (y in 0 until totalHeightImage.height) {
+                val index = stagingColorSize + 4 * (x + y * totalHeightImage.width)
+                stagingData.putFloat(index, totalHeightImage.getValueAt(x, y))
+            }
+        }
 
         val flushRanges = VkMappedMemoryRange.callocStack(1, stack)
         val flushRange = flushRanges[0]
@@ -173,7 +216,11 @@ fun createTextureImageResources(appState: ApplicationState) {
             0, null, null, preCopyBarriers
         )
 
-        // TODO Also transition height texture
+        preCopyBarrier.image(appState.textureHeightImage!!)
+        vkCmdPipelineBarrier(
+            copyBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+            0, null, null, preCopyBarriers
+        )
 
         val colorRegions = VkBufferImageCopy.callocStack(1, stack)
         val colorRegion = colorRegions[0]
@@ -193,7 +240,11 @@ fun createTextureImageResources(appState: ApplicationState) {
             copyBuffer, stagingBuffer, appState.textureColorImage!!, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, colorRegions
         )
 
-        // TODO Also copy to height texture
+        colorRegion.bufferOffset(stagingColorSize.toLong())
+        colorRegion.imageExtent { extent -> extent.set(totalHeightImage.width, totalHeightImage.height, 1) }
+        vkCmdCopyBufferToImage(
+            copyBuffer, stagingBuffer, appState.textureHeightImage!!, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, colorRegions
+        )
 
         val postCopyBarriers = VkImageMemoryBarrier.callocStack(1, stack)
         val postCopyBarrier = postCopyBarriers[0]
@@ -218,7 +269,11 @@ fun createTextureImageResources(appState: ApplicationState) {
             null, null, postCopyBarriers
         )
 
-        // TODO Also transition the height texture to VERTEX shader
+        postCopyBarrier.image(appState.textureHeightImage!!)
+        vkCmdPipelineBarrier(
+            copyBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, 0,
+            null, null, postCopyBarriers
+        )
 
         assertSuccess(
             vkEndCommandBuffer(copyBuffer), "EndCommandBuffer", "copy staging texture"
@@ -264,7 +319,12 @@ fun destroyTextureImageResources(appState: ApplicationState) {
     if (appState.textureColorImage != null) {
         vkDestroyImage(appState.device, appState.textureColorImage!!, null)
     }
-    // TODO Destroy terrain height resources
+    if (appState.textureHeightImageView != null) {
+        vkDestroyImageView(appState.device, appState.textureHeightImageView!!, null)
+    }
+    if (appState.textureHeightImage != null) {
+        vkDestroyImage(appState.device, appState.textureHeightImage!!, null)
+    }
     if (appState.textureImageMemory != null) {
         vkFreeMemory(appState.device, appState.textureImageMemory!!, null)
     }
