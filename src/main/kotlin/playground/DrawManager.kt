@@ -36,24 +36,25 @@ fun drawFrame(appState: ApplicationState) {
         siDraw.pCommandBuffers(stack.pointers(swapchainImage.staticDrawCommandBuffer))
         siDraw.pSignalSemaphores(stack.longs(swapchainImage.renderSemaphore))
 
-        // TODO Wait... shouldn't I wait for the shared render fence before starting this?
+        // Before rewriting the drawing buffers, we should wait until the current rendering is finished because the
+        // GPU may still be reading from these buffers.
+        assertSuccess(
+            vkWaitForFences(appState.device, stack.longs(appState.renderFence!!), true, 1_000_000_000),
+            "WaitForFences", "shared render"
+        )
+        assertSuccess(
+            vkResetFences(appState.device, stack.longs(appState.renderFence!!)),
+            "ResetFences", "shared render"
+        )
         fillDrawingBuffers(appState)
 
-        // For some reason, we have to wait for both the presentFence and renderFence, otherwise the validation layers
-        // will spit errors claiming that the command buffer isn't finished yet. That happens even if we use Thread.sleep
-        // to wait for 500 milliseconds... It is also weird since presenting is always done after rendering (semaphores
-        // ensure that), so it shouldn't matter whether we only wait on presentFence or on both presentFence and renderFence.
         assertSuccess(
-            vkWaitForFences(appState.device, stack.longs(pPresentFence[0], swapchainImage.renderFence), true, 1_000_000_000),
+            vkWaitForFences(appState.device, pPresentFence, true, 1_000_000_000),
             "WaitForFences", "present signal"
-        )
-        assertSuccess(
-            vkResetFences(appState.device, stack.longs(swapchainImage.renderFence)),
-            "ResetFences", "render"
         )
 
         assertSuccess(
-            vkQueueSubmit(appState.graphicsQueue, submissions, swapchainImage.renderFence),
+            vkQueueSubmit(appState.graphicsQueue, submissions, appState.renderFence!!),
             "QueueSubmit", "draw static"
         )
 
@@ -159,5 +160,26 @@ fun fillDrawingBuffers(appState: ApplicationState) {
             vkFlushMappedMemoryRanges(appState.device, memoryRanges),
             "FlushMappedMemoryRanges", "draw frame"
         )
+    }
+}
+
+fun createRenderFence(appState: ApplicationState) {
+    stackPush().use { stack ->
+        val ciRenderFence = VkFenceCreateInfo.callocStack(stack)
+        ciRenderFence.sType(VK_STRUCTURE_TYPE_FENCE_CREATE_INFO)
+        ciRenderFence.flags(VK_FENCE_CREATE_SIGNALED_BIT)
+
+        val pRenderFence = stack.callocLong(1)
+        assertSuccess(
+            vkCreateFence(appState.device, ciRenderFence, null, pRenderFence),
+            "CreateFence", "shared rendering"
+        )
+        appState.renderFence = pRenderFence[0]
+    }
+}
+
+fun destroyRenderFence(appState: ApplicationState) {
+    if (appState.renderFence != null) {
+        vkDestroyFence(appState.device, appState.renderFence!!, null)
     }
 }

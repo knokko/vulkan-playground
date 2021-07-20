@@ -4,7 +4,7 @@ import org.lwjgl.vulkan.VK10.vkFreeCommandBuffers
 import org.lwjgl.vulkan.VkCommandBuffer
 import org.lwjgl.vulkan.VkDevice
 
-class SwapchainImage(val image: Long, val renderSemaphore: Long, val renderFence: Long) {
+class SwapchainImage(val image: Long, val renderSemaphore: Long) {
 
     var view: Long? = null
     var framebuffer: Long? = null

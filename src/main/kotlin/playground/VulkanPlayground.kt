@@ -35,6 +35,7 @@ fun main() {
         createStaticDrawingCommandPool(appState)
         createStaticDrawCommandBuffers(appState)
         fillVertexBuffers(appState)
+        createRenderFence(appState)
 
         openWindow(appState)
         while (!shouldCloseWindow(appState)) {
@@ -48,6 +49,7 @@ fun main() {
 
     // Ensure that all resources are always destroyed
     waitQueues(appState)
+    destroyRenderFence(appState)
     destroyStaticDrawCommandBuffers(appState)
     destroyCommandPools(appState)
     destroyVertexBuffers(appState)

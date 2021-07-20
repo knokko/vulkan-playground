@@ -114,20 +114,7 @@ fun createSwapchain(appState: ApplicationState) {
             return pSemaphore[0]
         }
 
-        fun createFence(): Long {
-            val ciFence = VkFenceCreateInfo.callocStack(stack)
-            ciFence.sType(VK_STRUCTURE_TYPE_FENCE_CREATE_INFO)
-            ciFence.flags(VK_FENCE_CREATE_SIGNALED_BIT)
-
-            val pFence = stack.callocLong(1)
-            assertSuccess(
-                vkCreateFence(appState.device, ciFence, null, pFence),
-                "CreateFence"
-            )
-            return pFence[0]
-        }
-
-        val imagesArray = Array(numImages) { index -> SwapchainImage(images[index], createSemaphore(), createFence()) }
+        val imagesArray = Array(numImages) { index -> SwapchainImage(images[index], createSemaphore()) }
         appState.swapchainImages = imagesArray
     }
 }
@@ -140,7 +127,6 @@ fun destroySwapchain(appState: ApplicationState) {
     if (appState.hasSwapchainImages()) {
         for (swapchainImage in appState.swapchainImages) {
             vkDestroySemaphore(appState.device, swapchainImage.renderSemaphore, null)
-            vkDestroyFence(appState.device, swapchainImage.renderFence, null)
         }
     }
 }

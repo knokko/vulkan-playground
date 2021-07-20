@@ -71,6 +71,8 @@ class ApplicationState {
     var indirectDrawOffset: Long? = null
     var indirectCountOffset: Int? = null
 
+    var renderFence: Long? = null
+
     val camera = Camera()
 
     fun destroyInstance() {
