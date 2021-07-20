@@ -9,9 +9,10 @@ layout(set = 0, binding = 1) uniform sampler2D colorTextureSampler;
 layout(set = 0, binding = 2) uniform sampler2D heightTextureSampler;
 
 void main() {
-    // TODO Use lighting mathematics
     float delta = 0.001;
+    // TODO Stop hardcoding deltaDistance
     float deltaDistance = delta * 1.0;
+
     float heightLowX = texture(heightTextureSampler, texCoordinates - vec2(delta, 0.0)).r;
     float heightHighX = texture(heightTextureSampler, texCoordinates + vec2(delta, 0.0)).r;
     float heightLowZ = texture(heightTextureSampler, texCoordinates - vec2(0.0, delta)).r;
@@ -24,6 +25,29 @@ void main() {
 
     vec3 heightNormal = normalize(cross(heightVecZ, heightVecX));
 
+    // TODO Stop hardcoding the light & material properties
+    float ambientFactor = 0.1;
+    float diffuseFactor = 0.5;
+    // TODO Increase the specularConstant
+    float specularConstant = 0.0;
+    float shininess = 1.0;
+
+    vec3 toLight = normalize(vec3(100, 30, 10));
+    // TODO Stop hardcoding toView
+    vec3 toView = vec3(0.0, 1.0, 0.0);
+
+    float dotLightNormal = dot(toLight, heightNormal);
+    vec3 reflectedLight = normalize(2.0 * dotLightNormal * heightNormal - toLight);
+    float lightIntensity = ambientFactor;
+
+    if (dotLightNormal > 0.0) {
+        lightIntensity += diffuseFactor * dotLightNormal;
+        float dotReflectedView = dot(reflectedLight, toView);
+        if (dotReflectedView > 0.0) {
+            lightIntensity += specularConstant * pow(dotReflectedView, shininess);
+        }
+    }
+
     vec4 textureColor = texture(colorTextureSampler, texCoordinates);
-    outColor = vec4(0.5 * heightNormal + vec3(0.5, 0.5, 0.5), 1.0);
+    outColor = vec4(min(lightIntensity, 1.0) * textureColor.rgb, 1.0);
 }
