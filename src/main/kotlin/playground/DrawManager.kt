@@ -36,6 +36,7 @@ fun drawFrame(appState: ApplicationState) {
         siDraw.pCommandBuffers(stack.pointers(swapchainImage.staticDrawCommandBuffer))
         siDraw.pSignalSemaphores(stack.longs(swapchainImage.renderSemaphore))
 
+        // TODO Wait... shouldn't I wait for the shared render fence before starting this?
         fillDrawingBuffers(appState)
 
         // For some reason, we have to wait for both the presentFence and renderFence, otherwise the validation layers

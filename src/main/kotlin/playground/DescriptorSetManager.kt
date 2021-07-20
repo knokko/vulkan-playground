@@ -123,12 +123,15 @@ fun createStorageBuffer(appState: ApplicationState) {
 fun createBasicDescriptorSet(appState: ApplicationState) {
     stackPush().use { stack ->
 
-        // Just 1 uniform descriptor and 1 storage descriptor
-        val poolSizes = VkDescriptorPoolSize.callocStack(2, stack)
+        // Uniform descriptor, texture sampling descriptor, and storage descriptor
+        val poolSizes = VkDescriptorPoolSize.callocStack(3, stack)
         val uniformPoolSize = poolSizes[0]
         uniformPoolSize.type(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
         uniformPoolSize.descriptorCount(1)
-        val storagePoolSize = poolSizes[1]
+        val samplingPoolSize = poolSizes[1]
+        samplingPoolSize.type(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+        samplingPoolSize.descriptorCount(1)
+        val storagePoolSize = poolSizes[2]
         storagePoolSize.type(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
         storagePoolSize.descriptorCount(1)
 
@@ -163,13 +166,19 @@ fun createBasicDescriptorSet(appState: ApplicationState) {
         biUniform.offset(0)
         biUniform.range(VK_WHOLE_SIZE)
 
+        val iiSamplers = VkDescriptorImageInfo.callocStack(1, stack)
+        val iiSampler = iiSamplers[0]
+        iiSampler.sampler(appState.basicImageSampler!!)
+        iiSampler.imageView(appState.textureColorImageView!!)
+        iiSampler.imageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+
         val biStorages = VkDescriptorBufferInfo.callocStack(1, stack)
         val biStorage = biStorages[0]
         biStorage.buffer(appState.storageBuffer!!)
         biStorage.offset(0)
         biStorage.range(VK_WHOLE_SIZE)
 
-        val descriptorWrites = VkWriteDescriptorSet.callocStack(2, stack)
+        val descriptorWrites = VkWriteDescriptorSet.callocStack(3, stack)
         val uniformWrite = descriptorWrites[0]
         uniformWrite.sType(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET)
         uniformWrite.dstSet(appState.basicDescriptorSet!!)
@@ -179,10 +188,19 @@ fun createBasicDescriptorSet(appState: ApplicationState) {
         uniformWrite.descriptorType(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
         uniformWrite.pBufferInfo(biUniforms)
 
-        val storageWrite = descriptorWrites[1]
+        val samplerWrite = descriptorWrites[1]
+        samplerWrite.sType(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET)
+        samplerWrite.dstSet(appState.basicDescriptorSet!!)
+        samplerWrite.dstBinding(1)
+        samplerWrite.dstArrayElement(0)
+        samplerWrite.descriptorCount(1)
+        samplerWrite.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+        samplerWrite.pImageInfo(iiSamplers)
+
+        val storageWrite = descriptorWrites[2]
         storageWrite.sType(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET)
         storageWrite.dstSet(appState.basicDescriptorSet!!)
-        storageWrite.dstBinding(1)
+        storageWrite.dstBinding(2)
         storageWrite.dstArrayElement(0)
         storageWrite.descriptorCount(1)
         storageWrite.descriptorType(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)

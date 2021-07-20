@@ -47,6 +47,7 @@ fun initLogicalDevice(appState: ApplicationState) {
 
         val deviceFeatures = VkPhysicalDeviceFeatures.callocStack(stack)
         deviceFeatures.drawIndirectFirstInstance(true)
+        deviceFeatures.samplerAnisotropy(true)
 
         val ciDevice = VkDeviceCreateInfo.callocStack(stack)
         ciDevice.sType(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO)

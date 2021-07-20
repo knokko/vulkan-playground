@@ -5,7 +5,9 @@ layout(location = 1) in vec2 texCoordinates;
 
 layout(location = 0) out vec4 outColor;
 
+layout(set = 0, binding = 1) uniform sampler2D colorTextureSampler;
+
 void main() {
-    // TODO Use a texture and lighting mathematics
-    outColor = vec4(texCoordinates.xy, 0.0, 1.0);
+    // TODO Use lighting mathematics
+    outColor = texture(colorTextureSampler, texCoordinates);
 }

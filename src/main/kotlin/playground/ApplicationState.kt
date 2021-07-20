@@ -25,6 +25,8 @@ class ApplicationState {
     var textureColorImage: Long? = null
     var textureColorImageView: Long? = null
 
+    var basicImageSampler: Long? = null
+
     lateinit var instance: VkInstance
     var debugCallback: Long? = null
 
@@ -102,7 +104,7 @@ class ApplicationState {
     }
 
     fun destroyStaticDrawCommandBuffers() {
-        if (this::swapchainImages.isInitialized) {
+        if (this::swapchainImages.isInitialized && staticDrawCommandPool != null) {
             for (swapchainImage in swapchainImages) {
                 swapchainImage.destroyStaticDrawCommandBuffer(device, staticDrawCommandPool!!)
             }

@@ -9,15 +9,21 @@ import playground.ApplicationState
 import playground.assertSuccess
 
 fun createBasicPipelineLayout(appState: ApplicationState, stack: MemoryStack) {
-    val bindings = VkDescriptorSetLayoutBinding.callocStack(2, stack)
+    val bindings = VkDescriptorSetLayoutBinding.callocStack(3, stack)
     val ciCameraMatrix = bindings[0]
     ciCameraMatrix.binding(0)
     ciCameraMatrix.descriptorType(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
     ciCameraMatrix.descriptorCount(1)
     ciCameraMatrix.stageFlags(VK_SHADER_STAGE_VERTEX_BIT)
 
-    val ciTransformationMatrices = bindings[1]
-    ciTransformationMatrices.binding(1)
+    val ciColorImage = bindings[1]
+    ciColorImage.binding(1)
+    ciColorImage.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+    ciColorImage.descriptorCount(1)
+    ciColorImage.stageFlags(VK_SHADER_STAGE_FRAGMENT_BIT)
+
+    val ciTransformationMatrices = bindings[2]
+    ciTransformationMatrices.binding(2)
     ciTransformationMatrices.descriptorType(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
     ciTransformationMatrices.descriptorCount(1)
     ciTransformationMatrices.stageFlags(VK_SHADER_STAGE_VERTEX_BIT)
