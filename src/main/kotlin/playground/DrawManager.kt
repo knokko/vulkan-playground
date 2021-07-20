@@ -109,14 +109,14 @@ fun fillDrawingBuffers(appState: ApplicationState) {
     drawCommand3.firstInstance(2)
 
     val cameraMatrix = run {
-        val projectionMatrix = Matrix4f().setPerspective(
+        val projectionMatrix = Matrix4f().scale(1f, -1f, 1f).perspective(
             toRadians(70f),
             appState.swapchainWidth!!.toFloat() / appState.swapchainHeight!!.toFloat(),
             0.01f, 1000f, true
         )
 
         val viewMatrix = Matrix4f()
-            .rotateXYZ(toRadians(-appState.camera.pitch), toRadians(-appState.camera.yaw), 0f)
+            .rotateXYZ(toRadians(appState.camera.pitch), toRadians(appState.camera.yaw), 0f)
             .translate(-appState.camera.posX, -appState.camera.posY, -appState.camera.posZ)
         projectionMatrix.mul(viewMatrix)
     }

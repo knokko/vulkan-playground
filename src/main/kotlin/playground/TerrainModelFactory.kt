@@ -50,13 +50,13 @@ fun requestTerrainModel(
                 val indexLH = lowX + vertexFrequency * highZ
                 val indexHH = highX + vertexFrequency * highZ
 
-                indices.put(indexLL)
-                indices.put(indexHL)
-                indices.put(indexHH)
-
-                indices.put(indexHH)
                 indices.put(indexLH)
+                indices.put(indexHH)
+                indices.put(indexHL)
+
+                indices.put(indexHL)
                 indices.put(indexLL)
+                indices.put(indexLH)
             }
         }
     }, store)

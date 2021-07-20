@@ -26,7 +26,7 @@ fun createBasicPipelineLayout(appState: ApplicationState, stack: MemoryStack) {
     ciHeightImage.binding(2)
     ciHeightImage.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
     ciHeightImage.descriptorCount(1)
-    ciHeightImage.stageFlags(VK_SHADER_STAGE_VERTEX_BIT)
+    ciHeightImage.stageFlags(VK_SHADER_STAGE_VERTEX_BIT or VK_SHADER_STAGE_FRAGMENT_BIT)
 
     val ciTransformationMatrices = bindings[3]
     ciTransformationMatrices.binding(3)

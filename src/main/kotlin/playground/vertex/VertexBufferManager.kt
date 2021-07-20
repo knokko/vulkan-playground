@@ -276,9 +276,9 @@ fun destroyVertexBuffers(appState: ApplicationState) {
 }
 
 val MODEL_REQUESTS = arrayOf(
-    requestTerrainModel(5) { appState, resultModel -> appState.terrainModels.model5 = resultModel },
-    requestTerrainModel(15) { appState, resultModel -> appState.terrainModels.model15 = resultModel },
-    requestTerrainModel(50) { appState, resultModel -> appState.terrainModels.model50 = resultModel }
+    requestTerrainModel(10) { appState, resultModel -> appState.terrainModels.model5 = resultModel },
+    requestTerrainModel(50) { appState, resultModel -> appState.terrainModels.model15 = resultModel },
+    requestTerrainModel(500) { appState, resultModel -> appState.terrainModels.model50 = resultModel }
 )
 
 val TOTAL_NUM_VERTICES = MODEL_REQUESTS.sumOf { request -> request.numVertices }

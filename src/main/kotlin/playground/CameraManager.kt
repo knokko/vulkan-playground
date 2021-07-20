@@ -59,21 +59,21 @@ class Camera {
     var oldMouseY: Double? = null
 
     var posX: Float = 0f
-    var posY: Float = 190f
+    var posY: Float = 10f
     var posZ: Float = 0f
 
     var motionForward: Float = 0f
     var motionVertical: Float = 0f
     var motionSide: Float = 0f
 
-    var pitch: Float = -80f
+    var pitch: Float = 20f
     var yaw: Float = 0f
 
     val forwardDirection: Vector3f
-    get() = Vector3f(sin(toRadians(yaw)), 0f, cos(toRadians(yaw)))
+    get() = Vector3f(sin(toRadians(yaw)), 0f, -cos(toRadians(yaw)))
 
     val sideDirection: Vector3f
-    get() = Vector3f(cos(toRadians(yaw)), 0f, -sin(toRadians(yaw)))
+    get() = Vector3f(cos(toRadians(yaw)), 0f, sin(toRadians(yaw)))
 
     fun updateMovement() {
         posX += forwardDirection.x * motionForward

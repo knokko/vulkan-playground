@@ -19,7 +19,7 @@ layout(set = 0, binding = 3) readonly buffer Objects {
 void main() {
     mat4 transformationMatrix = objects.transformationMatrices[inMatrixIndex + gl_BaseInstance];
     float extraHeight = texture(heightTextureSampler, inTexCoordinates).r;
-    gl_Position = camera.matrix * transformationMatrix * vec4(inBasePosition + vec3(0.0, 0.03, 0.0) * extraHeight, 1.0);
+    gl_Position = camera.matrix * transformationMatrix * vec4(inBasePosition + inBaseNormal * extraHeight, 1.0);
 
     passBaseNormal = (transformationMatrix * vec4(inBaseNormal, 0.0)).xyz;
     passTexCoordinates = inTexCoordinates;

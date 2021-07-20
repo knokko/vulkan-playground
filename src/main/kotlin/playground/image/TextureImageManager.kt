@@ -28,7 +28,7 @@ fun createTextureImageResources(appState: ApplicationState) {
         for (x in 0 until terrainHeightImage.width) {
             for (y in 0 until terrainHeightImage.height) {
                 val color = Color(terrainHeightColorImage.getRGB(x, y))
-                val value = 0.1f * (color.red - 127)
+                val value = 0.001f * (color.red - 127)
                 terrainHeightImage.setValueAt(x, y, value)
             }
         }
@@ -271,7 +271,8 @@ fun createTextureImageResources(appState: ApplicationState) {
 
         postCopyBarrier.image(appState.textureHeightImage!!)
         vkCmdPipelineBarrier(
-            copyBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, 0,
+            copyBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
+            VK_PIPELINE_STAGE_VERTEX_SHADER_BIT or VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
             null, null, postCopyBarriers
         )
 
