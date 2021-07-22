@@ -123,6 +123,11 @@ fun fillDrawingBuffers(appState: ApplicationState) {
 
     cameraMatrix.get(appState.uniformData)
 
+    val offsetCameraPosition = 4 * 4 * 4
+    appState.uniformData.putFloat(offsetCameraPosition, appState.camera.posX)
+    appState.uniformData.putFloat(offsetCameraPosition + 4, appState.camera.posY)
+    appState.uniformData.putFloat(offsetCameraPosition + 8, appState.camera.posZ)
+
     val transformationMatrix1 = Matrix4f().scale(100f).translate(-1.6f, 0f, -0.5f)
     transformationMatrix1.get(appState.storageData)
 

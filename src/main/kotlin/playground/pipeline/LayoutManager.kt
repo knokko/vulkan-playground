@@ -14,7 +14,7 @@ fun createBasicPipelineLayout(appState: ApplicationState, stack: MemoryStack) {
     ciCameraMatrix.binding(0)
     ciCameraMatrix.descriptorType(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
     ciCameraMatrix.descriptorCount(1)
-    ciCameraMatrix.stageFlags(VK_SHADER_STAGE_VERTEX_BIT)
+    ciCameraMatrix.stageFlags(VK_SHADER_STAGE_VERTEX_BIT or VK_SHADER_STAGE_FRAGMENT_BIT)
 
     val ciColorImage = bindings[1]
     ciColorImage.binding(1)

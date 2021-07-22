@@ -15,7 +15,9 @@ fun createUniformBuffer(appState: ApplicationState) {
     stackPush().use { stack ->
 
         // Currently just 1 matrix of 4 x 4 floats consisting of 4 bytes each
-        val uniformSize = 4 * 4 * 4
+        val cameraMatrixSize = 4 * 4 * 4
+        val cameraPositionSize = 3 * 4
+        val uniformSize = cameraMatrixSize + cameraPositionSize
 
         val ciBuffer = VkBufferCreateInfo.callocStack(stack)
         ciBuffer.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)

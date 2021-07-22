@@ -1,10 +1,15 @@
 #version 450
 
-layout(location = 0) in vec3 baseNormal;
-layout(location = 1) in vec2 texCoordinates;
+layout(location = 0) in vec3 worldPosition;
+layout(location = 1) in vec3 baseNormal;
+layout(location = 2) in vec2 texCoordinates;
 
 layout(location = 0) out vec4 outColor;
 
+layout(set = 0, binding = 0) uniform Camera {
+    mat4 matrix;
+    vec3 position;
+} camera;
 layout(set = 0, binding = 1) uniform sampler2D colorTextureSampler;
 layout(set = 0, binding = 2) uniform sampler2D heightTextureSampler;
 
@@ -28,17 +33,15 @@ void main() {
     // TODO Stop hardcoding the light & material properties
     float ambientFactor = 0.1;
     float diffuseFactor = 0.5;
-    // TODO Increase the specularConstant
-    float specularConstant = 0.0;
+    float specularConstant = 0.2;
     float shininess = 1.0;
 
     vec3 toLight = normalize(vec3(100, 30, 10));
-    // TODO Stop hardcoding toView
-    vec3 toView = vec3(0.0, 1.0, 0.0);
+    vec3 toView = normalize(camera.position - worldPosition);
 
     float dotLightNormal = dot(toLight, heightNormal);
     vec3 reflectedLight = normalize(2.0 * dotLightNormal * heightNormal - toLight);
-    float lightIntensity = ambientFactor;
+    float lightIntensity = 0.0;
 
     if (dotLightNormal > 0.0) {
         lightIntensity += diffuseFactor * dotLightNormal;
@@ -48,6 +51,10 @@ void main() {
         }
     }
 
+    if (lightIntensity < ambientFactor) {
+        lightIntensity = ambientFactor;
+    }
+
     vec4 textureColor = texture(colorTextureSampler, texCoordinates);
-    outColor = vec4(min(lightIntensity, 1.0) * textureColor.rgb, 1.0);
+    outColor = vec4(min(lightIntensity, 1.0) * vec3(1.0, 1.0, 1.0), 1.0);
 }
