@@ -1,5 +1,8 @@
 package playground
 
+import playground.vertex.BasicVertex.Companion.MATERIAL_PLASTIC
+import playground.vertex.BasicVertex.Companion.MATERIAL_TERRAIN
+
 fun requestTerrainModel(
                        /**
                         * The returned Model will consist of vertexFrequency * vertexFrequency vertices
@@ -34,9 +37,13 @@ fun requestTerrainModel(
                 vertex.normal.x = 0f
                 vertex.normal.y = 1f
                 vertex.normal.z = 0f
-                vertex.textureCoordinates.x = x
-                vertex.textureCoordinates.y = z
+                vertex.colorTextureCoordinates.x = x
+                vertex.colorTextureCoordinates.y = z
+                vertex.heightTextureCoordinates.x = x
+                vertex.heightTextureCoordinates.y = z
                 vertex.matrixIndex = 0
+                vertex.materialIndex = MATERIAL_PLASTIC
+                vertex.deltaFactor = 1f
             }
         }
 

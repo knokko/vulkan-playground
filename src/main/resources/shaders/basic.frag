@@ -2,7 +2,11 @@
 
 layout(location = 0) in vec3 worldPosition;
 layout(location = 1) in vec3 baseNormal;
-layout(location = 2) in vec2 texCoordinates;
+layout(location = 2) in vec2 colorTexCoordinates;
+layout(location = 3) in vec2 heightTexCoordinates;
+layout(location = 4) flat in int matrixIndex;
+layout(location = 5) flat in int materialIndex;
+layout(location = 6) in float deltaFactor;
 
 layout(location = 0) out vec4 outColor;
 
@@ -12,6 +16,9 @@ layout(set = 0, binding = 0) uniform Camera {
 } camera;
 layout(set = 0, binding = 1) uniform sampler2D colorTextureSampler;
 layout(set = 0, binding = 2) uniform sampler2D heightTextureSampler;
+layout(set = 0, binding = 3) readonly buffer Objects {
+    mat4 transformationMatrices[];
+} objects;
 
 struct MaterialProperties {
     float ambientValue;
@@ -52,25 +59,86 @@ struct MaterialProperties {
     }
 };
 
-void main() {
-    float delta = 0.001;
-    // TODO Stop hardcoding deltaDistance
-    float deltaDistance = delta * 1.0;
+mat3 rotationMatrix(vec3 axis, float angle) {
+    axis = normalize(axis);
+    float s = sin(angle);
+    float c = cos(angle);
+    float oc = 1.0 - c;
 
-    float heightLowX = texture(heightTextureSampler, texCoordinates - vec2(delta, 0.0)).r;
-    float heightHighX = texture(heightTextureSampler, texCoordinates + vec2(delta, 0.0)).r;
-    float heightLowZ = texture(heightTextureSampler, texCoordinates - vec2(0.0, delta)).r;
-    float heightHighZ = texture(heightTextureSampler, texCoordinates + vec2(0.0, delta)).r;
+    return mat3(
+        oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,
+        oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,
+        oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c
+    );
+}
+
+/**
+ * Computes the normal vector that this 'fragment' would get if we only use the height texture to determine the normal
+ * vector.
+ */
+vec3 computeHeightNormal() {
+
+    // The normal vector is basically the derivative of the height. We approximate this by using a small delta x and z
+    float delta = 0.001;
+    float deltaDistance = delta * deltaFactor;
+
+    float heightLowX = texture(heightTextureSampler, heightTexCoordinates - vec2(delta, 0.0)).r;
+    float heightHighX = texture(heightTextureSampler, heightTexCoordinates + vec2(delta, 0.0)).r;
+    float heightLowZ = texture(heightTextureSampler, heightTexCoordinates - vec2(0.0, delta)).r;
+    float heightHighZ = texture(heightTextureSampler, heightTexCoordinates + vec2(0.0, delta)).r;
 
     float heightDiffX = heightHighX - heightLowX;
     float heightDiffZ = heightHighZ - heightLowZ;
     vec3 heightVecX = vec3(2.0 * deltaDistance, heightDiffX, 0.0);
     vec3 heightVecZ = vec3(0.0, heightDiffZ, 2.0 * deltaDistance);
 
-    vec3 heightNormal = normalize(cross(heightVecZ, heightVecX));
+    return normalize(cross(heightVecZ, heightVecX));
+}
 
-    MaterialProperties material = MATERIALS[0];
-    vec3 textureColor = texture(colorTextureSampler, texCoordinates).rgb;
+/**
+ * The computeHeightNormal() method computes the normal vector ONLY based on the height texture, but we should also
+ * take the base normal vector of this 'fragment' into account. (For instance, if the height normal is (0, 1, 0) and
+ * the base normal is (1, 0, 0), the combined normal would be (1, 0, 0). This gets much more complex for other height
+ * normals.)
+ */
+vec3 combineBaseWithHeightNormal(vec3 heightNormal) {
+    float PI = 3.1415926535897932384626433832795;
+    vec3 up = vec3(0.0, 1.0, 0.0);
+
+    float transformAngle = acos(dot(baseNormal, up));
+    vec3 combinedNormal = heightNormal;
+
+    // If we need to rotate (nearly) 180 degrees, we should just negate it. Using the general rotate method won't work
+    // (well) in this case because the cross product would be (nearly) the zero vector.
+    if (transformAngle > PI - 0.01) {
+        combinedNormal = -heightNormal;
+    } else if (transformAngle > 0.01) {
+        vec3 crossHelper = cross(baseNormal, up);
+
+        // With this cross method, I don't know in advance whether I need to rotate clickwise or counter-clockwise
+        mat3 matrix1 = rotationMatrix(crossHelper, transformAngle);
+        mat3 matrix2 = rotationMatrix(crossHelper, -transformAngle);
+        vec3 test = matrix1 * up;
+        if (dot(test, baseNormal) > 0.99) {
+            combinedNormal = matrix1 * heightNormal;
+        } else {
+            combinedNormal = matrix2 * heightNormal;
+        }
+    }
+
+    return combinedNormal;
+}
+
+void main() {
+    vec3 heightNormal = computeHeightNormal();
+
+    vec3 combinedNormal = combineBaseWithHeightNormal(heightNormal);
+
+    mat4 transformationMatrix = objects.transformationMatrices[matrixIndex];
+    vec3 transformedNormal = normalize((transformationMatrix * vec4(combinedNormal, 0.0)).xyz);
+
+    MaterialProperties material = MATERIALS[materialIndex];
+    vec3 textureColor = texture(colorTextureSampler, colorTexCoordinates).rgb;
     vec3 lightColor = vec3(1.0, 1.0, 1.0);
 
     vec3 ambientColor = textureColor * material.ambientValue;
@@ -78,16 +146,16 @@ void main() {
     vec3 specularColor = material.specularMaterialFactor * textureColor + material.specularLightFactor * lightColor;
     float shininess = material.shininess;
 
-    vec3 toLight = normalize(vec3(100, 20, 10));
+    vec3 toLight = normalize(vec3(100, 2000, 10));
     vec3 toView = normalize(camera.position - worldPosition);
 
-    float dotLightNormal = dot(toLight, heightNormal);
+    float dotLightNormal = dot(toLight, transformedNormal);
     vec3 resultColor = ambientColor;
 
     if (dotLightNormal > 0.0) {
         resultColor += diffuseColor * dotLightNormal;
 
-        vec3 reflectedLight = normalize(2.0 * dotLightNormal * heightNormal - toLight);
+        vec3 reflectedLight = normalize(2.0 * dotLightNormal * transformedNormal - toLight);
         float dotReflectedView = dot(reflectedLight, toView);
         if (dotReflectedView > 0.0) {
             resultColor += specularColor * pow(dotReflectedView, shininess);

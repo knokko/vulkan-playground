@@ -1,5 +1,6 @@
 package playground.vertex
 
+import org.joml.Vector3f
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.system.MemoryUtil.memByteBuffer
 import org.lwjgl.vulkan.*

@@ -32,7 +32,7 @@ fun createBasicPipelineLayout(appState: ApplicationState, stack: MemoryStack) {
     ciTransformationMatrices.binding(3)
     ciTransformationMatrices.descriptorType(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
     ciTransformationMatrices.descriptorCount(1)
-    ciTransformationMatrices.stageFlags(VK_SHADER_STAGE_VERTEX_BIT)
+    ciTransformationMatrices.stageFlags(VK_SHADER_STAGE_VERTEX_BIT or VK_SHADER_STAGE_FRAGMENT_BIT)
 
     val ciSetLayouts = VkDescriptorSetLayoutCreateInfo.callocStack(stack)
     ciSetLayouts.sType(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO)
