@@ -62,8 +62,7 @@ fun createBasicRenderPass(appState: ApplicationState) {
         subpass.pColorAttachments(refColorAttachments)
         subpass.pDepthStencilAttachment(refDepthAttachment)
         subpass.pResolveAttachments(refResolveAttachments)
-        // TODO Add input attachments for texture and height map
-        // No resolve and preserve attachments
+        // No input, resolve, and preserve attachments
 
         val ciRenderPass = VkRenderPassCreateInfo.callocStack(stack)
         ciRenderPass.sType(VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO)
