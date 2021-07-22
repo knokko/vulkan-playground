@@ -1,5 +1,6 @@
 package playground
 
+import playground.vertex.BasicVertex.Companion.MATERIAL_METAL
 import playground.vertex.BasicVertex.Companion.MATERIAL_PLASTIC
 import playground.vertex.BasicVertex.Companion.MATERIAL_TERRAIN
 
@@ -42,7 +43,7 @@ fun requestTerrainModel(
                 vertex.heightTextureCoordinates.x = x
                 vertex.heightTextureCoordinates.y = z
                 vertex.matrixIndex = 0
-                vertex.materialIndex = MATERIAL_PLASTIC
+                vertex.materialIndex = MATERIAL_TERRAIN
                 vertex.deltaFactor = 1f
             }
         }

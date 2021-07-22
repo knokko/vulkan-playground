@@ -14,7 +14,7 @@ fun createBasicPipelineLayout(appState: ApplicationState, stack: MemoryStack) {
     ciCameraMatrix.binding(0)
     ciCameraMatrix.descriptorType(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
     ciCameraMatrix.descriptorCount(1)
-    ciCameraMatrix.stageFlags(VK_SHADER_STAGE_VERTEX_BIT or VK_SHADER_STAGE_FRAGMENT_BIT)
+    ciCameraMatrix.stageFlags(VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT or VK_SHADER_STAGE_FRAGMENT_BIT)
 
     val ciColorImage = bindings[1]
     ciColorImage.binding(1)
@@ -26,13 +26,13 @@ fun createBasicPipelineLayout(appState: ApplicationState, stack: MemoryStack) {
     ciHeightImage.binding(2)
     ciHeightImage.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
     ciHeightImage.descriptorCount(1)
-    ciHeightImage.stageFlags(VK_SHADER_STAGE_VERTEX_BIT or VK_SHADER_STAGE_FRAGMENT_BIT)
+    ciHeightImage.stageFlags(VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT or VK_SHADER_STAGE_FRAGMENT_BIT)
 
     val ciTransformationMatrices = bindings[3]
     ciTransformationMatrices.binding(3)
     ciTransformationMatrices.descriptorType(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
     ciTransformationMatrices.descriptorCount(1)
-    ciTransformationMatrices.stageFlags(VK_SHADER_STAGE_VERTEX_BIT or VK_SHADER_STAGE_FRAGMENT_BIT)
+    ciTransformationMatrices.stageFlags(VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT or VK_SHADER_STAGE_FRAGMENT_BIT)
 
     val ciSetLayouts = VkDescriptorSetLayoutCreateInfo.callocStack(stack)
     ciSetLayouts.sType(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO)

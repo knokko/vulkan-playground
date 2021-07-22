@@ -94,7 +94,9 @@ fun choosePhysicalDevice(appState: ApplicationState) {
 
             val deviceFeatures = VkPhysicalDeviceFeatures.callocStack(stack)
             vkGetPhysicalDeviceFeatures(device, deviceFeatures)
-            scores[index].hasRequiredFeatures = deviceFeatures.drawIndirectFirstInstance() && deviceFeatures.samplerAnisotropy()
+            scores[index].hasRequiredFeatures =
+                deviceFeatures.drawIndirectFirstInstance() && deviceFeatures.samplerAnisotropy() &&
+                        deviceFeatures.tessellationShader()
 
             val pNumQueueFamilies = stack.callocInt(1)
             vkGetPhysicalDeviceQueueFamilyProperties(device, pNumQueueFamilies, null)

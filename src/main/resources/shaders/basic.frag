@@ -55,7 +55,7 @@ struct MaterialProperties {
         0.0, // diffuseLightFactor
         0.6, // specularMaterialFactor
         0.0, // specularLightFactor
-        90.0 // shininess
+        50.0 // shininess
     }
 };
 
@@ -146,7 +146,7 @@ void main() {
     vec3 specularColor = material.specularMaterialFactor * textureColor + material.specularLightFactor * lightColor;
     float shininess = material.shininess;
 
-    vec3 toLight = normalize(vec3(100, 2000, 10));
+    vec3 toLight = normalize(vec3(100, 120, 10));
     vec3 toView = normalize(camera.position - worldPosition);
 
     float dotLightNormal = dot(toLight, transformedNormal);

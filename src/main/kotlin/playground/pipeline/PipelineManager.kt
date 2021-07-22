@@ -5,6 +5,7 @@ import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkGraphicsPipelineCreateInfo
 import org.lwjgl.vulkan.VkPipelineDynamicStateCreateInfo
+import org.lwjgl.vulkan.VkPipelineTessellationStateCreateInfo
 import playground.ApplicationState
 import playground.assertSuccess
 import playground.createBasicShaders
@@ -26,6 +27,8 @@ fun createGraphicsPipelines(appState: ApplicationState) {
 
         vkDestroyShaderModule(appState.device, ciPipelines[0].pStages()[0].module(), null)
         vkDestroyShaderModule(appState.device, ciPipelines[0].pStages()[1].module(), null)
+        vkDestroyShaderModule(appState.device, ciPipelines[0].pStages()[2].module(), null)
+        vkDestroyShaderModule(appState.device, ciPipelines[0].pStages()[3].module(), null)
     }
 }
 
@@ -35,7 +38,7 @@ fun createBasicGraphicsPipeline(appState: ApplicationState, ciPipeline: VkGraphi
     ciPipeline.pStages(createBasicShaders(appState, stack))
     ciPipeline.pVertexInputState(createBasicVertexInputState(stack))
     ciPipeline.pInputAssemblyState(createBasicInputAssembly(stack))
-    // TODO Tessellation
+    ciPipeline.pTessellationState(createTessellationState(stack))
     ciPipeline.pViewportState(createBasicViewportState(stack))
     ciPipeline.pRasterizationState(createBasicRasterizationState(stack))
     ciPipeline.pMultisampleState(createBasicMultisampleState(appState, stack))
@@ -45,6 +48,14 @@ fun createBasicGraphicsPipeline(appState: ApplicationState, ciPipeline: VkGraphi
     ciPipeline.layout(appState.basicPipelineLayout!!)
     ciPipeline.renderPass(appState.basicRenderPass!!)
     ciPipeline.subpass(0)
+}
+
+fun createTessellationState(stack: MemoryStack): VkPipelineTessellationStateCreateInfo {
+    val ciTess = VkPipelineTessellationStateCreateInfo.callocStack(stack)
+    ciTess.sType(VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO)
+    ciTess.patchControlPoints(3)
+
+    return ciTess
 }
 
 fun createBasicDynamicState(stack: MemoryStack): VkPipelineDynamicStateCreateInfo {

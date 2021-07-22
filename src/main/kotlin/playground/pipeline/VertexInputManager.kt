@@ -72,7 +72,7 @@ fun createBasicVertexInputState(stack: MemoryStack): VkPipelineVertexInputStateC
 fun createBasicInputAssembly(stack: MemoryStack): VkPipelineInputAssemblyStateCreateInfo {
     val ciAssembly = VkPipelineInputAssemblyStateCreateInfo.callocStack(stack)
     ciAssembly.sType(VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO)
-    ciAssembly.topology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+    ciAssembly.topology(VK_PRIMITIVE_TOPOLOGY_PATCH_LIST)
     ciAssembly.primitiveRestartEnable(false)
 
     return ciAssembly
