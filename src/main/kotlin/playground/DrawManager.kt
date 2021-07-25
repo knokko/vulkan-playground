@@ -30,11 +30,20 @@ fun drawFrame(appState: ApplicationState) {
         val imageIndex = pNextImageIndex[0]
         val swapchainImage = appState.swapchainImages[imageIndex]
 
-        val submissions = VkSubmitInfo.callocStack(1, stack)
-        val siDraw = submissions[0]
+        val drawSubmissions = VkSubmitInfo.callocStack(1, stack)
+        val siDraw = drawSubmissions[0]
         siDraw.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO)
         siDraw.pCommandBuffers(stack.pointers(swapchainImage.staticDrawCommandBuffer))
         siDraw.pSignalSemaphores(stack.longs(swapchainImage.renderSemaphore))
+
+        val preparePresentSubmissions = VkSubmitInfo.callocStack(1, stack)
+        val siPreparePresent = preparePresentSubmissions[0]
+        siPreparePresent.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO)
+        siPreparePresent.pCommandBuffers(stack.pointers(swapchainImage.preparePresentCommandBuffer))
+        siPreparePresent.waitSemaphoreCount(1)
+        siPreparePresent.pWaitSemaphores(stack.longs(swapchainImage.renderSemaphore))
+        siPreparePresent.pWaitDstStageMask(stack.ints(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT))
+        siPreparePresent.pSignalSemaphores(stack.longs(swapchainImage.preparePresentSemaphore))
 
         // Before rewriting the drawing buffers, we should wait until the current rendering is finished because the
         // GPU may still be reading from these buffers.
@@ -54,13 +63,22 @@ fun drawFrame(appState: ApplicationState) {
         )
 
         assertSuccess(
-            vkQueueSubmit(appState.graphicsQueue, submissions, appState.renderFence!!),
+            vkQueueSubmit(appState.graphicsQueue, drawSubmissions, appState.renderFence!!),
             "QueueSubmit", "draw static"
+        )
+
+        if (appState.useVR!!) {
+            submitSwapchainImageToVr(appState, swapchainImage)
+        }
+
+        assertSuccess(
+            vkQueueSubmit(appState.graphicsQueue, preparePresentSubmissions, VK_NULL_HANDLE),
+            "QueueSubmit", "prepare present"
         )
 
         val presentInfo = VkPresentInfoKHR.callocStack(stack)
         presentInfo.sType(VK_STRUCTURE_TYPE_PRESENT_INFO_KHR)
-        presentInfo.pWaitSemaphores(stack.longs(swapchainImage.renderSemaphore))
+        presentInfo.pWaitSemaphores(stack.longs(swapchainImage.preparePresentSemaphore))
         presentInfo.swapchainCount(1)
         presentInfo.pSwapchains(stack.longs(appState.swapchain!!))
         presentInfo.pImageIndices(pNextImageIndex)

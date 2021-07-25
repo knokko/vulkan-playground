@@ -56,6 +56,9 @@ fun initInstance(appState: ApplicationState, tryDebug: Boolean) {
                 throw RuntimeException("The required instance extension $extension (required by GLFW) is not available")
             }
         }
+        if (appState.useVR!!) {
+            addVrInstanceExtensions(chosenExtensions)
+        }
 
         val numChosenExtensions = chosenExtensions.size
 
@@ -109,8 +112,15 @@ fun initInstance(appState: ApplicationState, tryDebug: Boolean) {
         }
         println()
 
+        val appInfo = VkApplicationInfo.callocStack(stack)
+        appInfo.sType(VK_STRUCTURE_TYPE_APPLICATION_INFO)
+        appInfo.pApplicationName(stack.UTF8("Vulkan Playground"))
+        appInfo.applicationVersion(1)
+        appInfo.apiVersion(VK_MAKE_VERSION(1, 2, 0))
+
         val ciInstance = VkInstanceCreateInfo.callocStack(stack)
         ciInstance.sType(VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO)
+        ciInstance.pApplicationInfo(appInfo)
         ciInstance.ppEnabledExtensionNames(pChosenExtensions)
         ciInstance.ppEnabledLayerNames(pChosenLayers)
 
@@ -128,8 +138,7 @@ fun initInstance(appState: ApplicationState, tryDebug: Boolean) {
             )
             ciDebugMessenger.messageType(
                 VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT or
-                        VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT or
-                        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT
+                        VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
             )
             ciDebugMessenger.pfnUserCallback { _, _, rawData, _->
                 val data = VkDebugUtilsMessengerCallbackDataEXT.create(rawData)

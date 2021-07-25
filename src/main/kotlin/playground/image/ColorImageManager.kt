@@ -7,7 +7,6 @@ import playground.ApplicationState
 
 fun createColorImage(appState: ApplicationState) {
     stackPush().use { stack ->
-
         appState.colorImage = createImage(
             appState.swapchainWidth!!, appState.swapchainHeight!!, appState.swapchainColorFormat!!, appState.sampleCount!!,
             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, "color", appState.device, stack

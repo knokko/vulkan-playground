@@ -181,7 +181,11 @@ fun choosePhysicalDevice(appState: ApplicationState) {
         }
 
         // So far, we only care about the required extensions, which must be available if we reach this line
-        val chosenExtensions = requiredDeviceExtensions.toSet()
+        val chosenExtensions = requiredDeviceExtensions.toMutableSet()
+        if (appState.useVR!!) {
+            addVrDeviceExtensions(chosenDevice, chosenExtensions)
+        }
+
         appState.physicalDevice = chosenDevice
         appState.deviceExtensions = chosenExtensions
     }

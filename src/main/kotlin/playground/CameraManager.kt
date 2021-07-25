@@ -51,6 +51,10 @@ fun updateCamera(appState: ApplicationState) {
     camera.oldMouseY = mouseY
 
     camera.updateMovement()
+
+    if (appState.useVR!!) {
+        getVrPoses(appState)
+    }
 }
 
 class Camera {

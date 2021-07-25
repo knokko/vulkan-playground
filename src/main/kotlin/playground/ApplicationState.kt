@@ -6,6 +6,8 @@ import java.nio.ByteBuffer
 
 class ApplicationState {
 
+    var useVR: Boolean? = null
+
     var window: Long? = null
     var windowSurface: Long? = null
     var swapchain: Long? = null
@@ -103,6 +105,14 @@ class ApplicationState {
                 if (swapchainImage.framebuffer != null) {
                     vkDestroyFramebuffer(device, swapchainImage.framebuffer!!, null)
                 }
+            }
+        }
+    }
+
+    fun destroyPreparePresentCommandBuffers() {
+        if (this::swapchainImages.isInitialized && staticDrawCommandPool != null) {
+            for (swapchainImage in swapchainImages) {
+                swapchainImage.destroyPreparePresentCommandBuffer(device, staticDrawCommandPool!!)
             }
         }
     }

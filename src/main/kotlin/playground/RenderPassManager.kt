@@ -38,7 +38,7 @@ fun createBasicRenderPass(appState: ApplicationState) {
         resolveAttachment.loadOp(VK_ATTACHMENT_LOAD_OP_DONT_CARE)
         resolveAttachment.storeOp(VK_ATTACHMENT_STORE_OP_STORE)
         resolveAttachment.initialLayout(VK_IMAGE_LAYOUT_UNDEFINED)
-        resolveAttachment.finalLayout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+        resolveAttachment.finalLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
 
         val refColorAttachments = VkAttachmentReference.callocStack(1, stack)
         val refColorAttachment = refColorAttachments[0]

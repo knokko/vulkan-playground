@@ -3,6 +3,7 @@ package playground.command
 import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.KHRDrawIndirectCount.vkCmdDrawIndexedIndirectCountKHR
+import org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 import org.lwjgl.vulkan.VK10.*
 import playground.ApplicationState
 import playground.INDIRECT_DRAW_STRIDE
@@ -93,6 +94,69 @@ fun createStaticDrawCommandBuffers(appState: ApplicationState) {
             vkEndCommandBuffer(drawBuffer)
         }
     }
+}
+
+fun createPreparePresentCommandBuffers(appState: ApplicationState) {
+    stackPush().use { stack ->
+        val numCommandBuffers = appState.swapchainImages.size
+
+        val aiPrepareCommand = VkCommandBufferAllocateInfo.callocStack(stack)
+        aiPrepareCommand.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO)
+        aiPrepareCommand.commandPool(appState.staticDrawCommandPool!!)
+        aiPrepareCommand.level(VK_COMMAND_BUFFER_LEVEL_PRIMARY)
+        aiPrepareCommand.commandBufferCount(numCommandBuffers)
+
+        val pPrepareCommands = stack.callocPointer(numCommandBuffers)
+        assertSuccess(
+            vkAllocateCommandBuffers(appState.device, aiPrepareCommand, pPrepareCommands),
+            "AllocateCommandBuffers", "prepare present"
+        )
+
+        for ((index, swapchainImage) in appState.swapchainImages.withIndex()) {
+            val prepareCommand = VkCommandBuffer(pPrepareCommands[index], appState.device)
+
+            val biPrepare = VkCommandBufferBeginInfo.callocStack(stack)
+            biPrepare.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO)
+
+            assertSuccess(
+                vkBeginCommandBuffer(prepareCommand, biPrepare),
+                "BeginCommandBuffer", "prepare present"
+            )
+
+            val transitions = VkImageMemoryBarrier.callocStack(1, stack)
+            val transition = transitions[0]
+            transition.sType(VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER)
+            transition.srcAccessMask(0)
+            transition.dstAccessMask(0)
+            transition.oldLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
+            transition.newLayout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+            transition.srcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+            transition.dstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+            transition.image(swapchainImage.image)
+            transition.subresourceRange { srr ->
+                srr.aspectMask(VK_IMAGE_ASPECT_COLOR_BIT)
+                srr.baseMipLevel(0)
+                srr.levelCount(1)
+                srr.baseArrayLayer(0)
+                srr.layerCount(1)
+            }
+
+            vkCmdPipelineBarrier(
+                prepareCommand, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                0, null, null, transitions
+            )
+
+            assertSuccess(
+                vkEndCommandBuffer(prepareCommand), "EndCommandBuffer", "prepare present"
+            )
+
+            swapchainImage.preparePresentCommandBuffer = prepareCommand
+        }
+    }
+}
+
+fun destroyPreparePresentCommandBuffers(appState: ApplicationState) {
+    appState.destroyPreparePresentCommandBuffers()
 }
 
 fun destroyStaticDrawCommandBuffers(appState: ApplicationState) {

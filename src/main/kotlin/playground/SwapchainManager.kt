@@ -33,8 +33,7 @@ fun createSwapchain(appState: ApplicationState) {
             "GetPhysicalDeviceSurfaceFormatsKHR", "formats"
         )
 
-        val bestImageFormats = arrayOf(VK_FORMAT_B8G8R8_SRGB, VK_FORMAT_R8G8B8_SRGB)
-        val niceImageFormats = arrayOf(VK_FORMAT_B8G8R8A8_SRGB, VK_FORMAT_R8G8B8A8_SRGB)
+        val suitableImageFormats = arrayOf(VK_FORMAT_B8G8R8A8_SRGB, VK_FORMAT_R8G8B8A8_SRGB)
 
         // Use the first format as back-up if we find nothing nice
         var chosenFormat = formats[0]
@@ -44,11 +43,9 @@ fun createSwapchain(appState: ApplicationState) {
             // This is currently the only color space not behind an extension. Also, the spec guarantees we won't need
             // a custom shader to transform it
             if (format.colorSpace() == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-                if (bestImageFormats.contains(format.format())) {
+                if (suitableImageFormats.contains(format.format())) {
                     chosenFormat = format
                     break
-                } else if (niceImageFormats.contains(format.format())) {
-                    chosenFormat = format
                 }
             }
         }
@@ -73,7 +70,10 @@ fun createSwapchain(appState: ApplicationState) {
         ciSwapchain.imageColorSpace(chosenFormat.colorSpace())
         ciSwapchain.imageExtent(swapchainExtent)
         ciSwapchain.imageArrayLayers(1)
-        ciSwapchain.imageUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+        ciSwapchain.imageUsage(
+            // OpenVR requires it to support transfer src and sampled
+            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT or VK_IMAGE_USAGE_TRANSFER_SRC_BIT or VK_IMAGE_USAGE_SAMPLED_BIT
+        )
         ciSwapchain.imageSharingMode(VK_SHARING_MODE_EXCLUSIVE)
         ciSwapchain.preTransform(surfaceCaps.currentTransform())
         ciSwapchain.compositeAlpha(VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR)
@@ -114,7 +114,7 @@ fun createSwapchain(appState: ApplicationState) {
             return pSemaphore[0]
         }
 
-        val imagesArray = Array(numImages) { index -> SwapchainImage(images[index], createSemaphore()) }
+        val imagesArray = Array(numImages) { index -> SwapchainImage(images[index], createSemaphore(), createSemaphore()) }
         appState.swapchainImages = imagesArray
     }
 }
@@ -126,6 +126,7 @@ fun destroySwapchain(appState: ApplicationState) {
 
     if (appState.hasSwapchainImages()) {
         for (swapchainImage in appState.swapchainImages) {
+            vkDestroySemaphore(appState.device, swapchainImage.preparePresentSemaphore, null)
             vkDestroySemaphore(appState.device, swapchainImage.renderSemaphore, null)
         }
     }

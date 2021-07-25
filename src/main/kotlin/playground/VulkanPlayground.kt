@@ -14,6 +14,7 @@ const val TRY_DEBUG = true
 fun main() {
     val appState = ApplicationState()
     try {
+        checkAndInitVrSupport(appState)
         initWindow(appState)
         initInstance(appState, TRY_DEBUG)
         initWindowSurface(appState)
@@ -34,6 +35,7 @@ fun main() {
         createVertexBuffers(appState)
         createStaticDrawingCommandPool(appState)
         createStaticDrawCommandBuffers(appState)
+        createPreparePresentCommandBuffers(appState)
         fillVertexBuffers(appState)
         createRenderFence(appState)
 
@@ -50,6 +52,7 @@ fun main() {
     // Ensure that all resources are always destroyed
     waitQueues(appState)
     destroyRenderFence(appState)
+    destroyPreparePresentCommandBuffers(appState)
     destroyStaticDrawCommandBuffers(appState)
     destroyCommandPools(appState)
     destroyVertexBuffers(appState)
@@ -62,6 +65,7 @@ fun main() {
     destroySwapchain(appState)
     destroyImageSamplers(appState)
     destroyTextureImageResources(appState)
+    destroyVrIfNeeded(appState)
     destroyLogicalDevice(appState)
     destroyWindowSurface(appState)
     destroyInstance(appState)
